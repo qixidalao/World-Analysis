@@ -59,6 +59,8 @@ adb install -r releases/JieXi-1.10.36-arm64.apk
 
 完整目录见 [docs/index.md](docs/index.md)。
 
+在线文档站：**https://qixidalao.github.io/World-Analysis/**
+
 ### 入门
 
 - [快速上手](docs/QUICKSTART.md)

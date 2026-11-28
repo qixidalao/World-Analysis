@@ -1,0 +1,286 @@
+/* extra-d2.css — agent-d2 名下样式：P-09 终端 + P-10~P-18 设置 / 日志
+   命名前缀：tm- = 终端，st- = 设置。颜色 / 字号 / 间距 / 圆角 / 动效只取 tokens.css 的 var(--*)，
+   组件外观尽量复用 css/ui.css（.row / .switch / .seg / .input / .slider / .term / .btn / .tag）。 */
+
+/* ============================================================
+   P-09 终端
+   ============================================================ */
+/* 整页固定高度，内部自己滚动（输出区 flex:1） */
+.tm-page{display:flex;flex-direction:column;height:100%;min-height:0;padding-bottom:0;overflow:hidden}
+.tm-page>.topbar{position:relative;flex:0 0 auto}
+
+/* 顶栏右侧引擎徽标：覆盖 .ico 的 44×44 方块 */
+.tm-badge{width:auto;height:auto;padding:var(--s1) var(--s2);border:1px solid var(--line);
+  border-radius:var(--r-full);background:var(--surface);font:var(--cap);color:var(--txt2);flex:0 0 auto}
+
+/* 能力说明条 */
+.tm-note{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1);margin:0 var(--pad) var(--s1);
+  padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-m);
+  background:var(--surface);font:var(--cap);color:var(--txt3)}
+.tm-note b{color:var(--warn);font-weight:700}
+.tm-note i{font-style:normal}
+
+/* 输出区 */
+.tm-out{flex:1;min-height:0;display:flex;margin:var(--s2) var(--pad) 0}
+.tm-out .term{flex:1;min-height:0;margin:0;padding:var(--s3);background:#070c10}
+.tm-line{min-height:18px}
+.tm-line.cmd{color:var(--info)}
+.tm-line.err{color:#ff8a65}          /* stdout 白 / 错误淡红 / 提示蓝（docs/10 §5） */
+.tm-line.hint{color:var(--info)}
+.tm-line.dimx{color:var(--txt3)}
+.tm-fold{padding:var(--s1) 0;margin-bottom:var(--s1);border-bottom:1px dashed var(--line);
+  color:var(--txt3);font:var(--cap)}
+.tm-fold b{margin-left:var(--s1);color:var(--info);font-weight:500;text-decoration:underline}
+
+/* 输入区 */
+.tm-input{flex:0 0 auto;margin:var(--s2) var(--pad) 0}
+.tm-input textarea.tm-ta{display:block;min-height:64px;max-height:132px;font:var(--mono);line-height:1.5;
+  background:#070c10;color:#c8d4dd;resize:none;overflow-y:auto}
+.tm-ta:focus{border-color:var(--accent)}
+
+/* 工具条 */
+.tm-bar{flex:0 0 auto;display:flex;gap:var(--s2);overflow-x:auto;padding:var(--s2) var(--pad) var(--s3);
+  scrollbar-width:none}
+.tm-bar::-webkit-scrollbar{display:none}
+.tm-bar b{flex:0 0 auto;padding:var(--s2) var(--s3);border-radius:var(--r-s);background:var(--surface);
+  border:1px solid var(--line);font:var(--sub);font-weight:500;color:var(--txt2)}
+.tm-bar b:active{background:var(--surface2)}
+.tm-bar b.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+
+/* ============================================================
+   P-09 终端 2.0（真 shell / Python / JS 三模式）
+   输出区与输入行共用一个深色面板，贴近真实终端的观感
+   ============================================================ */
+.tm-shell{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  margin:var(--s2) var(--pad) 0;background:#070c10;border:1px solid var(--line);
+  border-radius:var(--r-m);overflow:hidden}
+.tm-shell>.tm-out{flex:1 1 auto;min-height:0;display:flex;margin:0;overflow:hidden}
+.tm-shell>.tm-out>.term{flex:1 1 auto;min-height:0;margin:0;padding:var(--s3);background:transparent;
+  border:0;border-radius:0;overflow-y:auto}
+.tm-shell>.tm-input{flex:0 0 auto;display:flex;align-items:flex-start;gap:var(--s2);margin:0;
+  padding:var(--s2) var(--s3);border-top:1px solid var(--line);background:#0b1219}
+.tm-input>.tm-ps{flex:0 0 auto;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:var(--mono);color:var(--accent);line-height:1.55;padding-top:1px;user-select:none}
+.tm-input>textarea.tm-ta{flex:1 1 auto;min-width:0;display:block;margin:0;padding:0;border:0;
+  background:transparent;color:#c8d4dd;font:var(--mono);line-height:1.55;resize:none;
+  min-height:54px;max-height:132px;outline:none;overflow-y:auto}
+.tm-note .tm-live{color:var(--ok)}
+.tm-note code,.tm-note .mono{font-family:var(--mono-font)}
+
+/* ============================================================
+   P-09 终端 1.2：手机按键条 / 快捷胶囊 / 文件面板 / 输入法适配
+   ============================================================ */
+.tm-page{position:relative}
+.tm-page>.topbar .tm-ico{font-style:normal}
+
+/* 输入框右侧状态点 + 运行按钮 */
+.tm-input>.tm-live{flex:0 0 auto;font-size:10px;line-height:1;color:var(--ok);align-self:center;
+  animation:tm-pyblink 1s ease-in-out infinite}
+.tm-input>.tm-live[hidden]{display:none}
+.tm-input>.tm-go{flex:0 0 auto;align-self:center;padding:2px 8px;border:1px solid var(--line);
+  border-radius:var(--r-s);background:var(--surface);color:var(--txt2);font:var(--mono);line-height:1.4}
+.tm-input>.tm-go:active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* 快捷命令胶囊（常显，横向滚动） */
+.tm-chips{flex:0 0 auto;display:flex;gap:var(--s2);overflow-x:auto;padding:var(--s1) var(--pad) 0;
+  scrollbar-width:none}
+.tm-chips::-webkit-scrollbar{display:none}
+.tm-chips b{flex:0 0 auto;padding:3px 10px;border:1px solid var(--line);border-radius:var(--r-full);
+  background:var(--surface);color:var(--txt2);font:var(--cap);font-weight:500;user-select:none}
+.tm-chips b:active{background:var(--surface2);color:var(--txt)}
+
+/* 手机按键条：输入时出现，放在输入框下方（键盘上方） */
+.tm-keys{flex:0 0 auto;display:none;gap:var(--s2);overflow-x:auto;padding:var(--s1) var(--pad) var(--s2);
+  scrollbar-width:none}
+.tm-keys.on{display:flex}
+.tm-keys::-webkit-scrollbar{display:none}
+.tm-keys b{flex:0 0 auto;min-width:44px;text-align:center;padding:5px 10px;border:1px solid var(--line);
+  border-radius:var(--r-s);background:var(--surface2);color:var(--txt);font:var(--mono);font-weight:500;
+  user-select:none}
+.tm-keys b:active{background:var(--accent);border-color:var(--accent);color:#fff}
+.tm-keys b.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;
+  box-shadow:0 0 0 2px rgba(255,90,60,.25)}
+
+/* 右侧文件面板 */
+.tm-files{display:none}
+.tm-files.on{position:absolute;top:var(--topbar-h);right:0;bottom:0;left:0;z-index:30;
+  display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--line);
+  box-shadow:-10px 0 26px rgba(0,0,0,.45);animation:tm-slide-in var(--base) both}
+@keyframes tm-slide-in{from{transform:translateX(14px);opacity:.4}to{transform:none;opacity:1}}
+[data-motion="off"] .tm-files.on{animation:none}
+.tm-fhead{flex:0 0 auto;display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s3);
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.tm-fhead .tt{flex:1;min-width:0;font:var(--body-b);color:var(--txt)}
+.tm-fhead b{min-width:34px;height:34px;padding:0 8px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-s);background:var(--surface2);color:var(--txt2);font:var(--sub);font-weight:600}
+.tm-fhead b:active{background:var(--accent);color:#fff}
+.tm-fpath{flex:0 0 auto;display:flex;align-items:center;gap:2px;overflow-x:auto;padding:var(--s2) var(--s3);
+  border-bottom:1px solid var(--line);font:var(--mono);white-space:nowrap;scrollbar-width:none}
+.tm-fpath::-webkit-scrollbar{display:none}
+.tm-fpath .seg{flex:0 0 auto;padding:2px 4px;border-radius:4px;color:var(--info);font-weight:400}
+.tm-fpath .seg:active{background:var(--surface2)}
+.tm-fquick{flex:0 0 auto;display:flex;gap:var(--s2);overflow-x:auto;padding:var(--s2) var(--s3);
+  border-bottom:1px dashed var(--line);scrollbar-width:none}
+.tm-fquick::-webkit-scrollbar{display:none}
+.tm-fquick b{flex:0 0 auto;padding:2px 8px;border:1px solid var(--line);border-radius:var(--r-full);
+  background:var(--surface);color:var(--txt2);font:var(--cap);font-weight:500}
+.tm-fquick b:active{background:var(--surface2)}
+.tm-flist{flex:1 1 auto;min-height:0;overflow-y:auto;padding:var(--s1) 0 var(--s4)}
+.tm-frow{display:flex;align-items:center;gap:var(--s2);padding:9px var(--s3);border-bottom:1px solid rgba(30,40,49,.5)}
+.tm-frow:active{background:var(--surface)}
+.tm-frow .fi{flex:0 0 auto;width:18px;text-align:center;color:var(--info);font:var(--mono)}
+.tm-frow.lnk .fi{color:var(--warn)}
+.tm-frow .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:var(--mono);color:var(--txt)}
+.tm-frow .fm{flex:0 0 auto;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:var(--cap);color:var(--txt3)}
+.tm-fempty{padding:var(--s3);text-align:center;color:var(--txt3);font:var(--cap)}
+.tm-prev{margin:0;padding:var(--s3);max-height:52vh;overflow:auto;background:#070c10;
+  border:1px solid var(--line);border-radius:var(--r-m);font:var(--mono);color:#c8d4dd;white-space:pre-wrap;word-break:break-all}
+.tm-edit{display:block;width:100%;min-height:220px;max-height:52vh;margin:0;padding:var(--s3);
+  background:#070c10;color:#c8d4dd;border:1px solid var(--line);border-radius:var(--r-m);
+  font:var(--mono);line-height:1.5;resize:vertical}
+.tm-pin{margin:0 0 var(--s3)}
+.tm-facts{display:flex;gap:var(--s2);justify-content:flex-end;margin-top:var(--s3)}
+
+/* ============================================================
+   设置页通用件
+   ============================================================ */
+.st-grp{padding:var(--s4) var(--s4) var(--s2);font:var(--cap);color:var(--txt3);letter-spacing:.4px}
+
+/* 字段块：标题 + 当前值 + 说明 + 控件 */
+.st-field{padding:var(--s3) var(--s4);background:var(--surface);border-bottom:1px solid var(--line)}
+.st-fh{display:flex;align-items:center;gap:var(--s2)}
+.st-fh .nm{flex:1;min-width:0;font:var(--body);color:var(--txt)}
+.st-fh .v{font:var(--sub);color:var(--txt2);text-align:right;max-width:52%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-fd{margin-top:var(--s1);font:var(--cap);color:var(--txt3);line-height:1.55}
+
+/* 分段控件复用 ui.css 的 .seg，只补布局（4 段时也要放得下「DoH+代理」） */
+.st-seg{margin-top:var(--s3)}
+.st-seg b{flex:1;min-width:0;text-align:center;padding:6px var(--s1);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+
+/* 滑块（ui.css .slider）+ 数值右对齐 */
+.st-field .slider{margin-top:var(--s3)}
+
+/* 说明条 */
+.st-note{margin:var(--s3) var(--pad);padding:var(--s2) var(--s3);border:1px solid var(--line);
+  border-radius:var(--r-m);background:var(--surface);font:var(--cap);color:var(--txt3);line-height:1.65}
+.st-note b{color:var(--warn);font-weight:700}
+.st-note .mono{color:var(--txt2)}
+
+/* 下拉 / 输入 */
+.st-select{margin-top:var(--s2);padding:0 var(--s3);-webkit-appearance:none;appearance:none}
+.st-input{margin-top:var(--s2)}
+.st-two{display:flex;gap:var(--s2);margin-top:var(--s2)}
+.st-two .input{flex:1;min-width:0}
+
+/* 测试结果行 */
+.st-testres{margin-top:var(--s2);font:var(--cap);color:var(--txt3);line-height:1.6;word-break:break-all}
+.st-testres.ok{color:var(--ok)}
+.st-testres.err{color:var(--err)}
+
+/* 按钮组 */
+.st-btnwrap{display:flex;gap:var(--s2);padding:var(--s3) var(--pad)}
+.st-btnwrap-tight{padding:var(--s2) 0 0}
+.st-btnwrap .btn{flex:1}
+.btn-row{display:flex;gap:var(--s2);padding:var(--s3) var(--pad)}
+.btn-row .btn{flex:1}
+
+/* ---------- P-11 站点卡片 ---------- */
+.st-site{margin:var(--s3) var(--pad) 0;border:1px solid var(--line);border-radius:var(--r-m);
+  background:var(--surface);overflow:hidden}
+.st-site-h{display:flex;align-items:center;gap:var(--s3);padding:var(--s3)}
+.st-site-h .ic{width:28px;text-align:center;font-size:18px;flex:0 0 auto}
+.st-site-h .t{flex:1;min-width:0}
+.st-site-h .nm{font:var(--body);color:var(--txt)}
+.st-site-h .ds{margin-top:var(--s1);font:var(--cap);color:var(--txt3);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-ops{display:flex;flex-wrap:wrap;gap:var(--s2);padding:0 var(--s3) var(--s3)}
+.st-ops b{flex:0 0 auto;padding:var(--s2) var(--s3);border-radius:var(--r-s);background:var(--surface2);
+  border:1px solid var(--line);font:var(--cap);font-weight:500;color:var(--txt2)}
+.st-ops b.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.st-ops b.off{opacity:.35}
+.st-del{flex:0 0 auto;align-self:center;padding:var(--s2);font:var(--cap);color:var(--err)}
+
+/* ---------- P-14 强调色圆点 ---------- */
+.st-dots{display:flex;flex-wrap:wrap;gap:var(--s3);margin-top:var(--s3)}
+.st-dots i{width:28px;height:28px;border-radius:var(--r-full);border:2px solid transparent}
+.st-dots i.on{border-color:var(--txt)}
+
+/* ---------- P-16 占用横条 ---------- */
+.st-bar{display:flex;height:var(--s3);margin:0 var(--pad);border:1px solid var(--line);
+  border-radius:var(--r-full);overflow:hidden;background:var(--surface2)}
+.st-bar i{display:block;height:100%}
+.st-lg-wrap{padding:var(--s2) 0 var(--s1)}
+.st-lg{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--pad);
+  font:var(--sub);color:var(--txt2)}
+.st-lg .dt{width:8px;height:8px;border-radius:var(--r-full);flex:0 0 auto}
+.st-lg .nm{flex:1}
+.st-lg .v{font:var(--cap);color:var(--txt3)}
+
+/* ---------- P-18 日志 ---------- */
+.st-toolbar{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--pad)}
+.st-toolbar .seg{flex:1}
+.st-toolbar .st-clear{flex:0 0 auto}
+.st-log{padding-bottom:var(--s3)}
+.st-log-row{display:flex;gap:var(--s2);padding:var(--s1) var(--pad);font:var(--mono);line-height:1.55}
+.st-log-row .tm{flex:0 0 auto;font:var(--cap);color:var(--txt3)}
+.st-log-row .ms{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all}
+.st-log-row.lv-ok .ms{color:var(--ok)}
+.st-log-row.lv-info .ms{color:var(--info)}
+.st-log-row.lv-err .ms{color:var(--err)}
+.st-log-row.lv-def .ms{color:var(--txt2)}
+
+/* ---------- P-17 关于 ---------- */
+.st-about-hd{display:flex;align-items:center;gap:var(--s3);padding:var(--s5) var(--s4) var(--s4)}
+.st-about-ico{width:56px;height:56px;border-radius:var(--r-l);background:var(--surface);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:28px;flex:0 0 auto}
+.st-about-nm{font:var(--h1);color:var(--txt)}
+.st-about-ds{margin-top:var(--s1);font:var(--sub);color:var(--txt3)}
+.st-about-foot{margin:var(--s5) var(--pad);font:var(--cap);color:var(--txt3);
+  text-align:center;line-height:1.7}
+
+/* ---------- 剪贴板兜底 ---------- */
+.st-copyarea{width:100%;min-height:160px;font:var(--mono);background:var(--surface2);resize:vertical}
+
+/* ============================================================
+   P-09 双模式终端（JS / Python）追加样式
+   只使用 tokens.css 的变量；所有选择器均落在 tm- 前缀上。
+   ============================================================ */
+/* 顶栏模式开关（复用 .tm-badge，改成可点的胶囊） */
+.tm-mode{cursor:pointer;user-select:none;transition:border-color var(--fast),color var(--fast),background var(--fast)}
+.tm-mode:active{background:var(--surface2)}
+.tm-mode.tm-mode-py{border-color:var(--accent);background:var(--surface2);color:var(--accent);font-weight:700}
+.tm-mode:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 输出区右下角的「Python 启动中…」状态（不占输出行，不阻塞输入） */
+.tm-out{position:relative}
+.tm-pybusy{position:absolute;right:var(--s3);bottom:var(--s2);z-index:2;display:inline-flex;align-items:center;
+  gap:var(--s1);padding:var(--s1) var(--s2);border:1px solid var(--line);border-radius:var(--r-full);
+  background:var(--surface);color:var(--warn);font:var(--cap);pointer-events:none}
+.tm-pybusy[hidden]{display:none}
+.tm-pybusy::before{content:'';width:6px;height:6px;border-radius:var(--r-full);background:var(--warn);
+  animation:tm-pyblink 1s ease-in-out infinite}
+@keyframes tm-pyblink{0%,100%{opacity:.35}50%{opacity:1}}
+[data-motion="off"] .tm-pybusy::before{animation:none}
+
+/* Python 返回值：淡色 py> 前缀 + 输出色（错误仍走 .tm-line.err 红色） */
+.tm-line.tm-pyo{color:#c8d4dd}
+.tm-pfx{color:var(--txt3);opacity:.55;margin-right:3px;font-weight:400}
+
+/* 终端 Fn 功能键行 */
+.tm-fnkeys{display:none;gap:var(--s2);overflow-x:auto;padding:0 var(--pad) var(--s2);scrollbar-width:none}
+.tm-fnkeys.on{display:flex}
+.tm-fnkeys::-webkit-scrollbar{display:none}
+.tm-fnkeys b{flex:0 0 auto;min-width:40px;text-align:center;padding:4px 8px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface2);color:var(--txt2);font:var(--mono);font-size:12px;user-select:none}
+.tm-fnkeys b:active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ce-type{color:#7DD3FC}.ce-const{color:#C4B5FD}.ce-bi{color:#FBBF24}
+.home-block-editor{height:calc(100vh - 150px);min-height:320px;border-top:1px solid var(--line)}.home-block-editor .ce-wrap{height:100%}.home-block-editor-bar{display:flex;gap:8px;justify-content:flex-end;padding:10px var(--pad)}
+.code-overlay{position:fixed;inset:0;z-index:1300;background:var(--bg);display:flex;flex-direction:column}.code-overlay .topbar{flex:0 0 auto}.code-overlay-host{flex:1 1 auto;min-height:0;overflow:hidden}.code-overlay-host .ce-wrap{height:100%}
+.code-filebar{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:38px;padding:0 var(--pad);border-bottom:1px solid var(--line);font-size:12px}.code-filebar .star{color:var(--accent)}.code-filebar b{font-weight:600}.code-overlay .d1-edtools{flex:0 0 auto;overflow-x:auto}.code-overlay .topbar [data-act=save]{background:var(--accent);color:#fff;border-radius:8px;width:auto;padding:0 12px;font-size:13px}
+.home-code-wrap{position:relative}.home-code-wrap textarea{padding-top:36px}.home-code-wrap .home-code-edit{position:absolute;left:8px;top:6px;z-index:2}.home-code-wrap .home-css-edit{position:absolute;right:8px;top:6px;z-index:2}.home-save-return{display:flex;justify-content:center;align-items:center;gap:16px;padding:6px 0 2px;font-size:13px;color:var(--txt2)}.home-save-return label{display:flex;align-items:center;gap:4px}.home-save-return input{accent-color:var(--accent)}
+.home-code-wrap{border:1px solid var(--line);border-radius:var(--r-m);background:var(--surface);overflow:hidden}.home-code-tools{display:flex;justify-content:space-between;align-items:center;padding:4px 6px;border-bottom:1px solid var(--line)}.home-code-wrap .home-code-edit,.home-code-wrap .home-css-edit{position:static!important;top:auto!important;left:auto!important;right:auto!important}.home-code-wrap textarea{border:0!important;box-shadow:none!important;background:transparent!important;border-radius:0!important;padding:8px 10px!important}.home-code-wrap:focus-within{border-color:var(--accent)}
+:root{--ce-type:#7DD3FC;--ce-const:#C4B5FD;--ce-bi:#FBBF24}.ce-type{color:var(--ce-type)}.ce-const{color:var(--ce-const)}.ce-bi{color:var(--ce-bi)}
+.syn-row{display:flex;align-items:center;gap:10px;padding:8px var(--pad);border-bottom:1px solid var(--line);flex-wrap:wrap}.syn-name{min-width:76px;display:flex;flex-direction:column;gap:2px}.syn-name b{font-size:13px}.syn-name s{font-size:11px;color:var(--txt2);text-decoration:none;font-family:var(--mono)}.syn-row input[type=color]{width:32px;height:28px;border:0;background:none;padding:0}.syn-swatches{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 200px}.syn-swatches i{width:20px;height:20px;border-radius:50%;display:block;border:2px solid transparent;cursor:pointer}.syn-swatches i.on{border-color:var(--txt)}

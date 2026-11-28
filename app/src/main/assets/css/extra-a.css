@@ -1,0 +1,176 @@
+/* extra-a.css — agent-a 名下的补充样式
+   T-1 主页（功能卡/我的站点/继续观看/公告/底部署名）、T-3 收藏与历史、
+   T-4 我的（资料卡/统计）、V-09 主页自定义、V-10 个人资料。
+   规范：颜色 / 间距 / 圆角 / 动效一律取 tokens.css 的 --*（docs/08），本文件只补页面专用尺寸。 */
+
+:root{
+  /* 页面专用尺寸（取自 docs/07 线框标注，只在这三个 Tab 用） */
+  --cont-w:128px;        /* 继续观看横滑卡宽度 */
+  --hist-w:92px;         /* 历史行缩略图 92×58 */
+  --hist-h:58px;
+  --av-size:52px;        /* V-10 头像选择格 */
+  --me-av:52px;          /* T-4 资料卡头像 */
+  --skel-min:96px;       /* 「＋ 添加站点」大卡最小高 */
+  /* emoji 图标字号（ui.css 里图标字号也是字面量，这里收敛成变量便于统一调） */
+  --fz-emoji-lg:26px;
+  --fz-emoji:20px;
+  --fz-emoji-sm:14px;
+}
+
+/* ---------------- 通用小队件 ---------------- */
+/* 占位图铺满父容器（父容器自己 position:relative） */
+.phg-full{position:absolute;inset:0}
+/* 顶栏里可点的纯文字按钮（站点名 / 清空） */
+.topbar .ico.sitepick{width:auto;max-width:46vw;padding:0 var(--s2);gap:var(--s1);
+  display:flex;align-items:center;justify-content:flex-end;
+  font:var(--sub);font-weight:700;color:var(--txt2);white-space:nowrap;overflow:hidden}
+.topbar .ico.txtico{width:auto;padding:0 var(--s2);font:var(--sub);color:var(--txt2)}
+/* 停用态的小圆点（docs/07：站点停用 → 名称后加灰点） */
+.dot.off{background:var(--txt3)}
+/* 分区标题「更多 / 管理 / 全部」加大点击区域（≥44dp 的可点区靠内边距撑） */
+.sec-h .more{padding:var(--s1) 0 var(--s1) var(--s2);display:flex;align-items:center}
+/* 底部 Tab 浮在内容上（#tabview 全屏滚动），Tab 页末尾统一留白 */
+.tab-end{height:calc(var(--tabbar-h) + var(--s3))}
+
+/* ---------------- T-1 主页：欢迎语 ---------------- */
+.home-wel{padding:var(--s5) var(--pad) var(--s1)}
+.home-wel h1{font:var(--h1);color:var(--txt)}
+.home-wel p{font:var(--sub);color:var(--txt2);margin-top:var(--s1);line-height:1.7}
+
+/* ---------------- T-1 主页：功能卡宫格（C-18） ---------------- */
+.tiles.cols4{grid-template-columns:repeat(4,1fr)}
+.tiles .tile .cnt{max-width:calc(100% - var(--s4));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------------- T-1 主页：我的站点 ---------------- */
+.site-list{display:flex;flex-direction:column;gap:var(--s2)}
+.site{position:relative;display:flex;align-items:center;gap:var(--s3);
+  padding:var(--s3) var(--s4);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-m);transition:background var(--fast)}
+.site:active{background:var(--surface2)}
+.site.off{opacity:.72}
+.site .ic{width:40px;height:40px;flex:0 0 auto;border-radius:var(--r-m);background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:var(--fz-emoji);overflow:hidden}
+.site .ic img{width:100%;height:100%;object-fit:cover}
+.site .t{flex:1;min-width:0}
+.site .t .nm{font:var(--body-b);color:var(--txt);display:flex;align-items:center;gap:var(--s2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.site .t .ds{font:var(--cap);color:var(--txt3);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.site .st{flex:0 0 auto;font:var(--cap);padding:1px var(--s2);border-radius:var(--r-full);
+  border:1px solid var(--line);color:var(--txt3)}
+.site .st.on{color:var(--ok);border-color:var(--ok)}
+.site .arw{color:var(--txt3);font-size:var(--fz-emoji-sm)}
+
+/* 站点网格布局（V-09 切「网格卡片」） */
+.site-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--gm)}
+.site-grid .site{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"ic st" "t t";
+  align-items:center;gap:var(--s2);padding:var(--s3)}
+.site-grid .site .ic{grid-area:ic}
+.site-grid .site .st{grid-area:st;justify-self:end}
+.site-grid .site .t{grid-area:t}
+.site-grid .site .arw{display:none}
+
+/* 「＋ 添加站点」虚线大卡 */
+.site-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s1);
+  margin-top:var(--s2);padding:var(--s3);min-height:var(--skel-min);
+  border:1px dashed var(--line);border-radius:var(--r-m);
+  background:transparent;color:var(--txt3);font:var(--sub);text-align:center}
+.site-add:active{background:var(--surface)}
+.site-add.big{font:var(--body);color:var(--txt2)}
+.site-add small{font:var(--cap);color:var(--txt3);line-height:1.6}
+
+/* ---------------- T-1 主页：继续观看（128px 横滑） ---------------- */
+.hscroll{display:flex;gap:var(--gm);overflow-x:auto;padding:var(--s1) var(--pad) var(--s2);
+  scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.cont{flex:0 0 var(--cont-w);width:var(--cont-w)}
+.cont:active{opacity:.85}
+.cont .ph{position:relative;width:100%;aspect-ratio:16/10;border-radius:var(--r-s);
+  overflow:hidden;background:var(--surface2)}
+.cont .ph img{width:100%;height:100%;object-fit:cover}
+.cont .tt{margin-top:var(--s1);font:var(--cap);color:var(--txt2);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cont .pt{margin-top:var(--s1);font:var(--cap);color:var(--txt3)}
+.cont .prog{margin-top:var(--s1)}
+
+/* ---------------- T-1 主页：公告条 ---------------- */
+.notice{display:flex;align-items:center;gap:var(--s2);margin:var(--s4) var(--pad) 0;
+  padding:var(--s2) var(--s3);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-m);font:var(--cap);color:var(--txt3)}
+.notice .ni{font-size:var(--fz-emoji-sm);flex:0 0 auto}
+.notice .nt{flex:1;min-width:0;line-height:1.6}
+.notice .nx{width:32px;height:32px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--txt3)}
+
+/* ---------------- T-1 主页：底部署名 ---------------- */
+.home-foot{padding:var(--s5) var(--pad) 0;text-align:center;font:var(--cap);
+  color:var(--txt3);line-height:1.8}
+
+/* ---------------- T-3 收藏：历史行式列表 ---------------- */
+.hrow{display:flex;align-items:center;gap:var(--s3);padding:var(--s2) var(--pad);
+  border-bottom:1px solid var(--line);transition:background var(--fast)}
+.hrow:active{background:var(--surface2)}
+.hrow .pic{position:relative;flex:0 0 var(--hist-w);width:var(--hist-w);height:var(--hist-h);
+  border-radius:var(--r-s);overflow:hidden;background:var(--surface2)}
+.hrow .pic img{width:100%;height:100%;object-fit:cover}
+.hrow .pic .prog{position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:0;background:#0007}
+.hrow .t{flex:1;min-width:0}
+.hrow .t .nm{font:var(--body);color:var(--txt);line-height:1.45}
+.hrow .t .ds{font:var(--cap);color:var(--txt3);margin-top:var(--s1)}
+.hrow .pl{width:40px;height:40px;flex:0 0 auto;border-radius:var(--r-full);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);color:var(--accent);font-size:var(--fz-emoji-sm)}
+.hrow .pl:active{background:var(--accent);color:#fff}
+
+/* ---------------- T-4 我的：资料卡 + 统计 ---------------- */
+.me-card{display:flex;align-items:center;gap:var(--s3);margin:var(--s4) var(--pad) 0;
+  padding:var(--s4);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-l);transition:background var(--fast)}
+.me-card:active{background:var(--surface2)}
+.me-av{width:var(--me-av);height:var(--me-av);flex:0 0 auto;border-radius:var(--r-full);
+  background:var(--surface2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:var(--fz-emoji-lg)}
+.me-t{flex:1;min-width:0}
+.me-t .nm{font:var(--h2);color:var(--txt);display:flex;align-items:center;gap:var(--s1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me-t .nm .ed{font:var(--cap);color:var(--txt3);font-weight:400}
+.me-t .ds{font:var(--cap);color:var(--txt3);margin-top:var(--s1);line-height:1.5}
+.me-arw{font-size:var(--fz-emoji-sm);color:var(--txt3);flex:0 0 auto}
+.me-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gm);
+  margin:var(--s3) var(--pad) 0}
+.stat{padding:var(--s3) var(--s2);text-align:center;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-m)}
+.stat b{display:block;font:var(--h1);color:var(--txt)}
+.stat s{display:block;margin-top:var(--s1);font:var(--cap);color:var(--txt3);text-decoration:none}
+
+/* ---------------- V-09 / V-10 浮层 ---------------- */
+.sheet-hd{padding:var(--s4) var(--s4) var(--s2);font:var(--h2);color:var(--txt)}
+.sh-grp{padding:var(--s4) var(--s4) var(--s2);font:var(--cap);color:var(--txt3);letter-spacing:.4px}
+.sh-act{padding:var(--s4)}
+/* V-10 表单 */
+.fm{padding:var(--s2) var(--s4)}
+.fm label{display:block;font:var(--cap);color:var(--txt3);margin-bottom:var(--s2)}
+.avatars{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2)}
+.av{height:var(--av-size);display:flex;align-items:center;justify-content:center;
+  font-size:var(--fz-emoji-lg);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-m);transition:border-color var(--fast)}
+.av.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.av:active{background:var(--surface2)}
+/* 站点切换（V-01）行内小图标 */
+.ico.sico{width:32px;font-size:var(--fz-emoji-sm)}
+
+/* ---------------- T-1 长按菜单（home.js：站点卡 / 继续观看卡） ---------------- */
+.lp-hd{display:flex;align-items:center;gap:var(--s3);padding:var(--s4) var(--s4) var(--s2)}
+.lp-hd .lp-ic{width:40px;height:40px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;border-radius:var(--r-m);border:1px solid var(--line);background:var(--surface2);
+  font-size:var(--fz-emoji)}
+.lp-hd .lp-ic img{width:100%;height:100%;object-fit:cover}
+.lp-hd .lp-t{flex:1;min-width:0}
+.lp-hd .lp-nm{font:var(--h2);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-hd .lp-ds{font:var(--cap);color:var(--txt3);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lp-hd .lp-tag{flex:0 0 auto;font:var(--cap);color:var(--txt3);border:1px solid var(--line);
+  border-radius:var(--r-full);padding:2px var(--s2)}
+/* 「取消」单独一行，和操作组拉开距离 */
+.lp-cancel{margin-top:var(--s2);border-top:1px solid var(--line)}
+/* 长按卡片时不选中文字（真机上长按会触发文本选择，干扰菜单） */
+.site,.cont{-webkit-user-select:none;user-select:none}

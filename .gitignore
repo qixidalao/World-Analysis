@@ -1,0 +1,12 @@
+﻿*.apk
+*.idsig
+*.jks
+*.keystore
+build/
+wheels/
+shots/
+fixtures/
+rules/
+test/
+pyruntime/vendor/
+__pycache__/

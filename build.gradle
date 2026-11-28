@@ -1,0 +1,18 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://chaquo.com/maven' }   // Chaquopy 仓库
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.4'
+        classpath 'com.chaquo.python:gradle:17.2.0'
+    }
+}
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://chaquo.com/maven' }
+    }
+}

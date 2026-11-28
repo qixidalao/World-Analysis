@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+apply plugin: 'com.chaquo.python'
+
+android {
+    namespace 'com.rou.parser'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.rou.parser'
+        minSdk 24
+        targetSdk 35
+        versionCode 91
+        versionName '1.10.35'
+        // Python 只跑在 arm 上；x86 仅给模拟器用，可删
+        ndk { abiFilters 'arm64-v8a', 'armeabi-v7a' }
+    }
+
+    buildTypes {
+        debug { minifyEnabled false }
+        release { minifyEnabled false }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        // 真 CPython（不是 WASM），版本按需改：3.13 / 3.14 / 3.15 都有
+        version = '3.14'
+        // pip 依赖：纯 Python 包直接写；带 C 扩展的走官方预编译轮子仓库
+        pip {
+            // install 'requests'
+            // install 'certifi'
+            // install 'lxml'       // 预编译轮子（arm64）
+            // install 'pillow'     // 预编译轮子
+        }
+        pyc {
+            src = false   // 源码打进 APK（便于脚本热改）；要加密设 true
+        }
+    }
+    // 每个 ABI 各编一份，交给 Chaquopy 自动选
+    sourceSets {
+        main {
+            python.srcDirs = ['src/main/python']
+        }
+    }
+}
+
+dependencies {
+    // 播放：ExoPlayer（原生，比 WebView 稳）
+    // implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    // implementation 'androidx.media3:media3-exoplayer-hls:1.4.1'
+    // 可选：AndroidX WebKit（若要在 WebView 里加载本地 wasm/asset）
+    // implementation 'androidx.webkit:webkit:1.11.0'
+}

@@ -1,0 +1,61 @@
+/* extra-b.css — agent-b 负责的页面样式：P-01 列表 / P-03 搜索
+   规则：颜色/字号/间距/圆角/动效一律取 tokens（var(--*)）；
+         44px 为 docs/08 §8 要求的可点区域下限，其余尺寸由 token 组合。 */
+
+/* ================= P-01 列表 ================= */
+.p1-meta{display:flex;align-items:center;gap:var(--s1);min-width:0;
+  padding:var(--s3) 0 var(--s2);font:var(--sub);color:var(--txt3)}
+.p1-meta b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:var(--body-b);color:var(--txt2);font-weight:700}
+.p1-meta span{flex:0 0 auto}
+
+/* 底部：加载中 / 到底 / 失败重试（:empty 时完全收起，不占高度） */
+.p1-foot{display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  padding:var(--s4) var(--pad);font:var(--sub);color:var(--txt3)}
+.p1-foot:empty{display:none;padding:0}
+.p1-end{color:var(--txt3)}
+.p1-err{max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--err)}
+.p1-foot .btn{height:calc(var(--s5) + var(--s2));padding:0 var(--s3);font:var(--sub)}
+
+/* ================= P-03 搜索 ================= */
+.p3-top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:var(--s2);
+  padding:var(--s2) var(--pad);background:var(--bg);border-bottom:1px solid var(--line)}
+.p3-field{position:relative;flex:1;min-width:0}
+/* 右侧给「搜索」按钮留位：24+24+16 = 64 */
+.p3-inp{padding-right:calc(var(--s5) + var(--s5) + var(--s4))}
+.p3-go{position:absolute;right:var(--s1);top:var(--s1);bottom:var(--s1);
+  padding:0 var(--s3);border:0;border-radius:var(--r-s);background:var(--accent);
+  color:#fff;font:var(--body-b);transition:opacity var(--fast)}
+.p3-go:active{opacity:.85}
+.p3-cancel{flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  min-height:44px;padding:0 var(--s1);color:var(--accent);font:var(--body-b);transition:opacity var(--fast)}
+.p3-cancel:active{opacity:.7}
+.p3-body{padding-top:var(--s1)}
+
+/* 离线提示条（有历史时保留内容，只提示） */
+.p3-hint{display:flex;align-items:center;gap:var(--s2);margin:var(--s3) var(--pad) 0;
+  padding:var(--s2) var(--s3);border:1px solid var(--line);border-radius:var(--r-m);
+  background:var(--surface);font:var(--sub);color:var(--txt2)}
+.p3-hint b{margin-left:auto;color:var(--accent);font-weight:700}
+
+/* 搜索历史：整行点按直搜，右侧 ✕ 单条删除 */
+.p3-hist{display:flex;flex-direction:column}
+.p3-hrow{display:flex;align-items:center;gap:var(--s2);min-height:44px;
+  padding-left:var(--s1);border-bottom:1px solid var(--line);
+  color:var(--txt);border-radius:var(--r-s);transition:background var(--fast)}
+.p3-hrow:active{background:var(--surface2)}
+.p3-hico{flex:0 0 auto;color:var(--txt3);font:var(--body);line-height:1}
+.p3-htxt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:var(--body)}
+.p3-hdel{flex:0 0 auto;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  color:var(--txt3);font:var(--sub)}
+.p3-hdel:active{color:var(--err)}
+
+/* 热门标签（cats） */
+.p3-chips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.p3-chip{display:inline-flex;align-items:center;max-width:100%;min-height:36px;padding:0 var(--s3);
+  border:1px solid var(--line);border-radius:var(--r-full);background:var(--surface);
+  color:var(--txt2);font:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:background var(--fast),border-color var(--fast),color var(--fast)}
+.p3-chip:active{background:var(--surface2);border-color:var(--accent);color:var(--txt)}
+.p3-chip-sk{width:calc(var(--s5) * 3);height:calc(var(--s5) + var(--s3));
+  border-radius:var(--r-full);flex:0 0 auto}

@@ -1,0 +1,53 @@
+/* tokens.css — 设计系统（docs/08）：颜色 / 字阶 / 间距 / 圆角 / 动效
+   禁止页面内联魔法数字：一律用 var(--*) 或下面 css 变量。 */
+:root{
+  /* 色彩 */
+  --bg:#0B1116; --surface:#141B22; --surface2:#1D2831; --line:#1E2831;
+  --txt:#E6EDF3; --txt2:#A9B6BF; --txt3:#8A8F98;
+  --accent:#FF5A3C; --ok:#4CAF50; --warn:#FFB300; --err:#FF5252; --info:#7DD3FC;
+  /* 字号/行高 */
+  --h1:800 20px/26px var(--font); --h2:700 17px/23px var(--font);
+  --body:400 14px/20px var(--font); --body-b:700 14px/20px var(--font);
+  --sub:400 12px/17px var(--font); --cap:400 11px/15px var(--font);
+  --mono:400 13px/19px var(--mono-font);
+  --font:-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+  --mono-font:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  /* 间距（只用这 5 个） */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px;
+  /* 圆角 */
+  --r-s:8px; --r-m:12px; --r-l:16px; --r-full:999px;
+  /* 动效 */
+  --fast:120ms ease-out; --base:200ms ease-out; --slow:280ms ease-in-out;
+  /* 布局 */
+  --pad:14px; --gm:12px;
+  --tabbar-h:56px; --topbar-h:56px;
+}
+:root[data-theme="light"]{
+  --bg:#FFFFFF; --surface:#F5F7F9; --surface2:#EAEEF2; --line:#E3E8ED;
+  --txt:#0F1720; --txt2:#4B5B68; --txt3:#8B98A5;
+  --ok:#2E9E4F; --warn:#E9A000; --err:#E03B3B; --info:#2C8FC4;
+}
+:root[data-motion="off"]{ --fast:0ms linear; --base:0ms linear; --slow:0ms linear; }
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--txt); font:var(--body);
+  overflow:hidden; overscroll-behavior:none;
+  -webkit-font-smoothing:antialiased;
+  /* 移动端 WebView 默认长按会全选整页并弹“复制/全选/网页搜索”；
+     App 里只在输入框/可选区域允许选择，避免误触整页选择 */
+  -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+}
+/* 需要选文字的地方（输入框、编辑器、预览/日志）单独放开 */
+input, textarea, pre, code, .selectable{
+  -webkit-user-select:text; user-select:text;
+}
+img, a{ -webkit-user-drag:none; -webkit-touch-callout:none; }
+a{color:var(--info);text-decoration:none}
+b,strong{font-weight:700}
+s{text-decoration:none}
+button,select,input,textarea{font:inherit;color:inherit}
+img{display:block;border:0}
+::-webkit-scrollbar{width:0;height:0}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}

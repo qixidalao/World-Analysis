@@ -1,0 +1,337 @@
+/* extra-d1.css — agent-d1 页面样式：P-04 脚本列表 / P-05 脚本编辑 / P-06 脚本详情 / P-19 新建脚本向导 / P-07 模块管理 / P-08 模块详情
+   约定（docs/08）：颜色 / 字号 / 间距 / 圆角一律取 var(*)；类名统一 d1- 前缀，避免和其他人的 extra-*.css 冲突。
+   编辑器 / 日志等代码区域固定用深色（浅色主题下也保持代码可读），单独定义 --d1-code-* 组件级变量。 */
+
+:root{
+  --d1-code-bg:#070c10;
+  --d1-code-bg2:#0B1116;
+  --d1-code-fg:#E6EDF3;
+  --d1-code-dim:#8A8F98;
+  --d1-code-accent:#7DD3FC;
+}
+
+/* ensureStyles 的探测点：样式表加载后该变量才存在 */
+.d1-probe{--d1-css:1;position:absolute;left:-9999px;top:0}
+
+/* ---------- 通用 ---------- */
+.d1-dim{color:var(--txt3)}
+.d1-pad{padding:var(--s3) var(--s4) var(--s5)}
+.d1-sheet-h{font:var(--h2);padding:var(--s2) var(--s4) var(--s2)}
+.d1-note{font:var(--cap);color:var(--txt3);line-height:1.65;padding:var(--s2) var(--s4)}
+.d1-hint{font:var(--cap);color:var(--err);line-height:1.55;padding:0 var(--s4) var(--s2)}
+.d1-copybox{min-height:150px;margin-top:var(--s2);font-family:var(--mono-font);font-size:12px;line-height:1.6}
+.d1-sheet-acts{display:flex;gap:var(--s2);justify-content:flex-end;padding:var(--s3) 0 0}
+.d1-file{display:block;width:100%;margin:var(--s2) 0;padding:var(--s2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);font:var(--sub);color:var(--txt2)}
+.d1-warn{display:flex;align-items:flex-start;gap:var(--s2);margin:var(--s3) var(--pad) 0;padding:10px 12px;
+  border:1px solid rgba(255,179,0,.35);border-radius:var(--r-m);background:rgba(255,179,0,.08);
+  font:var(--sub);line-height:1.55;color:var(--warn)}
+.d1-warn b{flex:0 0 auto;color:var(--warn)}
+.d1-warn span{flex:1;min-width:0}
+.d1-demo{font:var(--cap);color:var(--warn);line-height:1.55;padding:var(--s2) var(--s3);
+  border-radius:var(--r-s);background:rgba(255,179,0,.08);margin-top:var(--s2)}
+.d1-marginh{margin-left:var(--pad);margin-right:var(--pad)}
+.d1-okline{font:var(--sub);color:var(--ok);line-height:1.6;padding:2px 0 var(--s1)}
+.d1-errtext{font:var(--sub);color:var(--err);line-height:1.65;white-space:pre-wrap;word-break:break-word;padding:var(--s1) 0}
+.d1-meta{font:var(--sub);color:var(--txt2);line-height:1.65;margin-top:2px;word-break:break-all}
+.d1-foot{font:var(--cap);color:var(--txt3);line-height:1.75;padding:var(--s4) var(--pad) var(--s5)}
+
+/* ---------- P-04 脚本列表 ---------- */
+.d1-acts{display:flex;gap:var(--s2);padding:var(--s2) var(--pad) var(--s3)}
+.d1-acts .btn{flex:1}
+.d1-list{margin:0 var(--pad);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden}
+.d1-si{display:flex;align-items:center;gap:var(--s3);padding:var(--s3);border-bottom:1px solid var(--line);
+  background:var(--surface);transition:background var(--fast);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.d1-si:last-child{border-bottom:0}
+.d1-si:active{background:var(--surface2)}
+.d1-si-ico{flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-m);background:var(--surface2);font-size:20px;line-height:1}
+.d1-si-t{flex:1;min-width:0}
+.d1-si-n{font:var(--body-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-si-m{font:var(--cap);color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-si .switch{flex:0 0 auto}
+.d1-si-arw{flex:0 0 auto;width:22px;text-align:right;color:var(--txt3);font-size:18px;line-height:1}
+
+/* ---------- P-05 脚本编辑 ---------- */
+/* 第 2 层页面会隐藏底部 Tab（core.js renderPage），所以页面按整屏高排版；
+   margin-bottom 抵消 .page 的 padding-bottom，让工具条贴底。 */
+.d1-edpage{display:flex;flex-direction:column;
+  height:calc(100vh - env(safe-area-inset-bottom));
+  margin-bottom:calc(var(--s5) * -1)}
+.d1-subseg{display:flex;padding:0 var(--pad) var(--s2)}
+.d1-holder{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--d1-code-bg2);border-top:1px solid var(--line)}
+.d1-edwrap{flex:1;min-height:0;display:flex;overflow:hidden}
+.d1-gutter{flex:0 0 auto;width:42px;padding:var(--s3) var(--s1) var(--s3) 0;text-align:right;
+  font-family:var(--mono-font);font-size:13px;line-height:19px;color:var(--d1-code-dim);
+  background:var(--d1-code-bg);border-right:1px solid var(--line);overflow:hidden;white-space:pre}
+.d1-ed{flex:1;min-width:0;height:100%;padding:var(--s3);border:0;outline:0;resize:none;
+  background:transparent;color:var(--d1-code-fg);font-family:var(--mono-font);font-size:13px;line-height:19px;
+  white-space:pre;overflow:auto;tab-size:4;-webkit-text-size-adjust:100%}
+.d1-form{flex:1;min-height:0;overflow-y:auto;padding-bottom:var(--s3)}
+.d1-field{display:flex;align-items:center;gap:var(--s3);min-height:54px;padding:var(--s2) var(--s4);
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.d1-field .lb{flex:0 0 auto;max-width:46%;font:var(--body);color:var(--txt)}
+.d1-field .lb small{display:block;margin-top:2px;font:var(--cap);color:var(--txt3);font-weight:400}
+.d1-field input{flex:1;min-width:0;height:36px;padding:0;border:0;outline:0;background:transparent;
+  text-align:right;font:var(--body);color:var(--txt)}
+.d1-field input.mono{font-family:var(--mono-font);font-size:12px;color:var(--txt2)}
+.d1-req{color:var(--err);font-weight:700}
+.d1-expr{margin:var(--s2) var(--s4);padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-s);
+  background:var(--d1-code-bg);color:var(--d1-code-accent);
+  font-family:var(--mono-font);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-all}
+.d1-tools{flex:0 0 auto;display:flex;gap:var(--s1);
+  padding:var(--s2) var(--s2) calc(var(--s2) + env(safe-area-inset-bottom));
+  background:var(--bg);border-top:1px solid var(--line)}
+.d1-tools .btn{flex:1;height:38px;padding:0 var(--s1);font-size:12px;border-radius:var(--r-s);white-space:nowrap}
+
+/* 编辑器快捷条（撤销/重做/符号）：横向滚动，戳一下插到光标处 */
+.d1-edtools{flex:0 0 auto;display:flex;align-items:center;gap:var(--s1);overflow-x:auto;
+  padding:var(--s1) var(--pad);border-bottom:1px solid var(--line);background:var(--surface);
+  scrollbar-width:none}
+.d1-edtools::-webkit-scrollbar{display:none}
+.d1-edtools b{flex:0 0 auto;min-width:34px;height:30px;display:flex;align-items:center;justify-content:center;
+  padding:0 var(--s1);border:1px solid var(--line);border-radius:var(--r-s);background:var(--surface2);
+  color:var(--txt2);font:var(--mono);font-size:12px;user-select:none}
+.d1-edtools b:active{background:var(--accent);border-color:var(--accent);color:#fff}
+.d1-edtools i{flex:0 0 auto;width:1px;height:18px;background:var(--line);margin:0 var(--s1)}
+.d1-reswrap{flex:0 0 auto;max-height:36vh;overflow:auto;border-top:1px solid var(--line);background:var(--surface)}
+.d1-result>summary{list-style:none;padding:8px var(--s3);background:var(--surface2);
+  font:var(--cap);color:var(--txt2);cursor:pointer}
+.d1-result>summary::-webkit-details-marker{display:none}
+.d1-result-body{padding:0}
+.d1-pre{margin:0;padding:var(--s2) var(--s3);max-height:26vh;overflow:auto;
+  background:var(--d1-code-bg);color:#C8D4DD;font-family:var(--mono-font);font-size:11px;line-height:1.6;
+  white-space:pre-wrap;word-break:break-all}
+.d1-pre-err{color:#FF8A65}
+.d1-test-b{padding:var(--s2) var(--s3) var(--s3)}
+.d1-test-row{font:var(--sub);color:var(--txt2);line-height:1.55;padding:4px 0;border-top:1px solid var(--line);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-test-row:first-child{border-top:0}
+.d1-err{flex:0 0 auto;max-height:96px;overflow:auto;padding:8px var(--s3);
+  background:rgba(255,82,82,.1);border-top:1px solid rgba(255,82,82,.3);
+  font:var(--cap);line-height:1.55;color:var(--err);white-space:pre-wrap;word-break:break-word}
+
+/* ---------- P-06 脚本详情 ---------- */
+.d1-hero{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--pad) var(--s2)}
+.d1-hero-ico{flex:0 0 auto;width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-l);background:var(--surface2);font-size:26px;line-height:1}
+.d1-hero-t{flex:1;min-width:0}
+.d1-hero-n{font:var(--h1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-hero-m{font:var(--cap);color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-tags{display:flex;flex-wrap:wrap;gap:var(--s1);margin-top:var(--s1)}
+.d1-actrow{display:flex;gap:var(--s2);padding:0 var(--pad) var(--s3)}
+.d1-actrow .btn{flex:1;height:40px}
+.d1-dangerrow{padding-top:var(--s4)}
+.d1-kv{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--s4);
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.d1-in{height:34px;min-width:0;padding:0 var(--s2);border:1px solid var(--line);border-radius:var(--r-s);
+  background:var(--surface2);color:var(--txt);font:var(--sub);outline:0}
+.d1-in:focus{border-color:var(--accent)}
+.d1-in.k{flex:0 0 38%;width:38%;font-family:var(--mono-font);font-size:12px}
+.d1-in.v{flex:1;font-family:var(--mono-font);font-size:12px;color:var(--txt2)}
+.d1-x{flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r-s);background:rgba(255,82,82,.12);color:var(--err);font-size:12px}
+
+/* ---------- P-19 向导 ---------- */
+.d1-wizpage{display:flex;flex-direction:column;
+  height:calc(100vh - env(safe-area-inset-bottom));
+  margin-bottom:calc(var(--s5) * -1)}
+.d1-wizbody{flex:1;min-height:0;overflow-y:auto;padding-bottom:var(--s3)}
+.d1-stepbar{flex:0 0 auto;display:flex;flex-direction:column;gap:var(--s1);
+  padding:var(--s2) var(--s2) calc(var(--s2) + env(safe-area-inset-bottom));
+  background:var(--bg);border-top:1px solid var(--line)}
+.d1-steprow{display:flex;gap:var(--s2)}
+.d1-steprow .btn{flex:1;height:42px;border-radius:var(--r-s)}
+.d1-steprow .btn.back{flex:0 0 88px}
+.d1-types{display:flex;flex-direction:column;gap:var(--s2);padding:var(--s2) var(--pad)}
+.d1-type{display:flex;align-items:center;gap:var(--s3);padding:var(--s4);
+  border:2px solid var(--line);border-radius:var(--r-m);background:var(--surface);transition:border-color var(--fast)}
+.d1-type:active{background:var(--surface2)}
+.d1-type.on{border-color:var(--accent)}
+.d1-type-i{flex:0 0 32px;text-align:center;font-size:22px;line-height:1}
+.d1-type-body{flex:1;min-width:0}
+.d1-type-n{font:var(--body-b);margin-bottom:2px}
+.d1-type-d{font:var(--cap);color:var(--txt3);line-height:1.55}
+.d1-emoji{display:flex;flex-wrap:wrap;gap:var(--s2);padding:0 var(--s4) var(--s3)}
+.d1-emoji b{width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+  border:2px solid transparent;border-radius:var(--r-m);background:var(--surface2);font-size:19px;font-weight:400}
+.d1-emoji b.on{border-color:var(--accent)}
+.d1-select{flex:0 0 auto;display:flex;align-items:center;justify-content:flex-end;gap:var(--s1);
+  max-width:56%;font:var(--sub);color:var(--info);text-align:right}
+.d1-select span{color:var(--txt3)}
+.d1-codebox{display:block;width:calc(100% - var(--pad) * 2);height:44vh;margin:0 var(--pad);padding:var(--s3);
+  border:1px solid var(--line);border-radius:var(--r-m);background:var(--d1-code-bg);color:var(--d1-code-fg);
+  font-family:var(--mono-font);font-size:13px;line-height:19px;outline:0;resize:none;overflow:auto;
+  white-space:pre;tab-size:4}
+pre.d1-codebox-pre{height:auto;max-height:44vh;white-space:pre-wrap;word-break:break-all;
+  font-size:12px;line-height:1.7}
+.d1-test{margin:var(--s3) var(--pad) 0;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-m);overflow:hidden}
+.d1-test-h{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+  padding:9px var(--s3);border-bottom:1px solid var(--line);font:700 13px/18px var(--font)}
+.d1-test-b{padding:var(--s2) var(--s3) var(--s3)}
+
+/* ---------- P-07 模块管理 / P-08 模块详情 ---------- */
+.d1-search{display:flex;align-items:center;gap:var(--s1);height:44px;margin:var(--s3) var(--pad) 0;
+  padding:0 var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)}
+.d1-search>span:first-child{flex:0 0 auto;font-size:14px;color:var(--txt3)}
+.d1-search input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:var(--txt);font:var(--body)}
+.d1-search .go{flex:0 0 auto;display:flex;align-items:center;height:100%;padding:0 var(--s1);
+  color:var(--accent);font:var(--body-b)}
+.d1-grp{display:flex;align-items:center;gap:var(--s1);padding:var(--s4) var(--pad) var(--s2);
+  font:var(--cap);color:var(--txt3);letter-spacing:.4px}
+.d1-det{margin:var(--s3) 0 0;padding:0 var(--pad)}
+.d1-pkgcard{padding:var(--s3);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-m)}
+.d1-pkgcard>.d1-note{padding-left:0;padding-right:0}
+.d1-pkg-h{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2);margin-bottom:var(--s1)}
+.d1-pkg-n{font-family:var(--mono-font);font-size:15px;font-weight:700;line-height:1.5}
+.d1-pkg-v{font:var(--sub);color:var(--txt3)}
+.d1-lv{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-full);font:var(--cap)}
+.d1-lv.l1{background:rgba(76,175,80,.16);color:var(--ok)}
+.d1-lv.l2{background:rgba(125,211,252,.16);color:var(--info)}
+.d1-lv.l3{background:rgba(255,82,82,.16);color:var(--err)}
+.d1-pkg-acts{display:flex;gap:var(--s2);margin-top:var(--s3)}
+.d1-pkg-acts .btn{flex:1;min-height:38px;height:auto;padding:7px 6px;border-radius:var(--r-s);
+  font-size:12px;line-height:1.3;white-space:normal}
+.d1-empty{margin:0 var(--pad);padding:var(--s4);border:1px dashed var(--line);border-radius:var(--r-m);
+  font:var(--sub);color:var(--txt3);text-align:center;line-height:1.65}
+.d1-instlist{margin:0 var(--pad)}
+.d1-inst{display:flex;align-items:center;gap:var(--s3);padding:var(--s3);background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.d1-inst:last-child{border-bottom:0}
+.d1-inst-ico{flex:0 0 auto;width:20px;text-align:center;font-size:14px;line-height:1}
+.d1-inst .d{flex:1;min-width:0}
+.d1-inst .n{font:var(--body-b);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-inst .m{font:var(--cap);color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.d1-inst .acts{flex:0 0 auto;display:flex;align-items:center;gap:var(--s3)}
+.d1-link{font:var(--sub);color:var(--info)}
+.d1-danger{font:var(--sub);color:var(--err)}
+.d1-install{margin-top:var(--s2)}
+.d1-progline{display:flex;align-items:center;gap:var(--s2);margin:var(--s2) 0}
+.d1-progline .prog{flex:1}
+.d1-pct{flex:0 0 38px;text-align:right;font:var(--cap);color:var(--txt3)}
+.d1-phase{font:var(--cap);color:var(--info);margin-bottom:var(--s1)}
+.d1-log{margin-top:var(--s2);padding-top:var(--s2);border-top:1px solid var(--line)}
+.d1-log>summary{list-style:none;font:var(--cap);color:var(--txt3);cursor:pointer}
+.d1-log>summary::-webkit-details-marker{display:none}
+.d1-log pre{margin:var(--s2) 0 0;padding:var(--s2);max-height:130px;overflow:auto;
+  border-radius:var(--r-s);background:var(--d1-code-bg);color:var(--txt2);
+  font-family:var(--mono-font);font-size:11px;line-height:1.65;white-space:pre-wrap;word-break:break-all}
+.d1-code{margin:var(--s2) var(--s4);padding:var(--s3);overflow:auto;
+  background:var(--d1-code-bg);border:1px solid var(--line);border-radius:var(--r-m);
+  color:#C8D4DD;font-family:var(--mono-font);font-size:11px;line-height:1.7;
+  white-space:pre-wrap;word-break:break-all}
+
+/* ================= CodeEditor 代码高亮（js/editor.js；组件前缀 .ce-） =================
+   高亮层 pre>code 与输入层 textarea 必须完全同字体 / 同字号 / 同行高 / 同 padding /
+   同 white-space，否则文字会上下错位。行高固定 19px，JS 会读计算样式兜底。
+   代码区固定深色（浅色主题也保持可读），颜色一律走 --ce-* 组件变量。 */
+.ce{
+  --ce-bg:var(--d1-code-bg);
+  --ce-fg:var(--d1-code-fg);
+  --ce-pad-y:var(--s3);
+  --ce-pad-x:var(--s3);
+  --ce-lh:19px;
+  --ce-line:rgba(125,211,252,.08);
+  --ce-sel:rgba(125,211,252,.24);
+  --ce-kw:#FF7B72;
+  --ce-str:#A5D6A7;
+  --ce-num:#F0B37E;
+  --ce-com:#6E7B87;
+  --ce-fn:#82AAFF;
+  --ce-punct:#93A1AD;
+  --ce-key:#7DD3FC;
+  --ce-note-bg:var(--surface2);
+  position:relative;display:flex;flex:1 1 auto;height:100%;min-height:0;overflow:hidden;
+  background:var(--ce-bg);border-top:1px solid var(--line);
+  font:var(--mono);line-height:var(--ce-lh);color:var(--ce-fg);
+  -webkit-text-size-adjust:100%}
+.ce-gutter{position:relative;z-index:2;flex:0 0 auto;width:calc(3ch + 18px);
+  padding:var(--ce-pad-y) var(--s2) var(--ce-pad-y) 0;overflow:hidden;
+  text-align:right;white-space:pre;-webkit-user-select:none;user-select:none;
+  font:inherit;line-height:var(--ce-lh);color:var(--d1-code-dim);
+  background:var(--d1-code-bg2);border-right:1px solid var(--line)}
+.ce-gln{position:relative;z-index:1;display:block}
+.ce-curg{position:absolute;left:0;right:0;top:0;height:var(--ce-lh);display:none;
+  background:var(--ce-line);pointer-events:none}
+.ce-wrap{position:relative;z-index:1;flex:1 1 auto;min-width:0;overflow:hidden}
+.ce-hl{position:absolute;top:0;right:0;bottom:0;left:0;margin:0;
+  padding:var(--ce-pad-y) var(--ce-pad-x);overflow:hidden;pointer-events:none;
+  white-space:pre;word-break:normal;overflow-wrap:normal;
+  -moz-tab-size:4;tab-size:4;color:var(--ce-fg);z-index:1;
+  /* pre 自带 UA 的 monospace，会覆盖继承的字体：必须显式用同一套等宽字体 */
+  font:var(--mono);line-height:var(--ce-lh)}
+.ce-hl code{display:block;min-width:max-content;font:inherit;line-height:inherit;
+  white-space:pre;will-change:transform;transform:translate(0,0)}
+.ce-cur{position:absolute;left:0;right:0;top:0;height:var(--ce-lh);display:none;
+  background:var(--ce-line);pointer-events:none;z-index:0}
+.ce-ta{position:absolute;top:0;right:0;bottom:0;left:0;width:100%;height:100%;margin:0;
+  padding:var(--ce-pad-y) var(--ce-pad-x);border:0;border-radius:0;outline:0;resize:none;
+  background:transparent;color:transparent;caret-color:var(--txt);
+  font:var(--mono);line-height:var(--ce-lh);white-space:pre;
+  word-break:normal;overflow-wrap:normal;overflow:auto;tab-size:4;z-index:2;
+  -webkit-text-size-adjust:100%;scrollbar-width:none;-ms-overflow-style:none}
+.ce-ta::selection{background:var(--ce-sel);color:transparent}
+.ce-ta::placeholder{color:var(--d1-code-dim);-webkit-text-fill-color:var(--d1-code-dim)}
+.ce-ta::-webkit-scrollbar{width:0;height:0;display:none}
+.ce-note{display:none;position:absolute;left:0;right:0;bottom:0;z-index:3;
+  padding:var(--s1) var(--s3);text-align:center;pointer-events:none;
+  background:var(--ce-note-bg);border-top:1px solid rgba(255,179,0,.35);
+  box-shadow:0 -2px 8px rgba(0,0,0,.35);
+  color:var(--warn);font:var(--cap);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ce:focus-within .ce-gutter{color:var(--txt2)}
+.ce-ro .ce-ta{caret-color:transparent;cursor:default}
+.ce-ro .ce-cur,.ce-ro .ce-curg{display:none !important}
+
+/* ---------- 降级：超过 2000 行只保留行号 + 纯 textarea ---------- */
+.ce-lite .ce-hl,.ce-lite .ce-cur,.ce-lite .ce-curg{display:none !important}
+.ce-lite .ce-ta{color:var(--ce-fg);padding-bottom:calc(var(--ce-pad-y) + 24px)}
+.ce-lite .ce-note{display:block}
+.ce-lite .ce-gutter{opacity:.72}
+
+/* ---------- token 配色 ---------- */
+.ce-kw{color:var(--ce-kw)}
+.ce-str{color:var(--ce-str)}
+.ce-num{color:var(--ce-num)}
+.ce-com{color:var(--ce-com);font-style:italic}
+.ce-fn{color:var(--ce-fn)}
+.ce-punct{color:var(--ce-punct)}
+.ce-key{color:var(--ce-key)}
+.ce-dec{color:var(--ce-fn)}
+
+/* 浅色主题下代码区仍是深色，光标用代码前景色，避免深色光标看不见 */
+:root[data-theme="light"] .ce .ce-ta{caret-color:var(--ce-fg)}
+
+/* ===== 模块商店 (P-07) ===== */
+.ms-seg{margin:var(--s2) var(--pad) 0}
+.ms-status{padding:var(--s2) var(--pad);font-size:12px;color:var(--info);border-bottom:1px solid var(--line)}
+.ms-status[hidden]{display:none}
+.ms-empty{padding:var(--s4);text-align:center;color:var(--txt3);font:var(--sub)}
+.ms-body .row .btn{flex:0 0 auto;margin-left:var(--s1)}
+.ms-form{padding:0 var(--pad) var(--s3);display:flex;flex-direction:column;gap:var(--s2)}
+.ms-form .input{width:100%}
+.ms-upd{margin:var(--s2) var(--pad) 0;padding:var(--s2) var(--s3);border:1px solid #f5a52455;background:#f5a52414;border-radius:var(--r-m);display:flex;align-items:center;gap:var(--s2);font:var(--sub);color:var(--txt)}
+.ms-upd .btn{margin-left:auto}
+/* 新建脚本向导：复用完整 CodeEditor（语法高亮/行号/快捷键） */
+.wiz-ce{height:46vh;margin:0 var(--pad);border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;background:var(--bg2);display:flex}
+.wiz-ce .ce{flex:1 1 auto;width:100%;height:100%;min-height:0}
+/* 站点参数表单（脚本 config/CONFIG 自动生成） */
+.d1-cfg-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.d1-cfg-l{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.d1-cfg-l b{font-size:14px;color:var(--txt)}
+.d1-cfg-l span{font:var(--cap);color:var(--txt3)}
+.d1-cfg-row .input{flex:0 0 46%;width:46%;margin:0}
+.d1-cfg-row .switch{flex:0 0 auto}
+/* 编辑器顶栏：状态 + 主保存按钮 + 更多 */
+.top-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex:0 0 auto}
+.top-actions .top-save{height:32px;min-height:0;padding:0 14px;border-radius:9px;font-size:13px;line-height:32px}
+.top-actions .top-save[disabled]{opacity:.45;pointer-events:none}
+.top-actions .ico{width:36px;height:36px}
+/* 多文件标签栏 */
+.file-strip{display:flex;align-items:center;gap:4px;padding:6px var(--pad);overflow-x:auto;overflow-y:hidden;background:var(--bg);border-bottom:1px solid var(--line);-webkit-overflow-scrolling:touch}
+.file-tab{flex:0 0 auto;display:flex;align-items:center;gap:4px;height:30px;padding:0 10px;border-radius:7px;font-size:12px;color:var(--txt3);background:var(--bg2);white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.file-tab.on{color:var(--txt);background:var(--bg3)}
+.file-tab .star{color:var(--accent);font-size:10px}
+.file-tab .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+.file-add{flex:0 0 auto;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;color:var(--txt3);background:var(--bg2);font-size:16px}

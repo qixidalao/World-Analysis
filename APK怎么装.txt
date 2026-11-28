@@ -1,0 +1,31 @@
+界析 JieXi 1.5.0 —— APK 怎么装
+
+手机（arm64）：JieXi-1.5.0-arm64.apk（约 24.7 MB，内置 Python 3.11）
+模拟器 x86_64：JieXi-1.5.0-x86_64.apk
+只想要 shell：JieXi-1.5.0-lean.apk（约 736 KB）
+
+注意：手机不能装 x86_64 包（提示“与设备不兼容”/-113）。手机请装 arm64。
+
+1.5.0 新增
+  ✓ pip 支持 Android 预编译 wheel（cp311 + android_<api>_<abi>）
+      自己编译的 lxml/numpy 轮子放到服务器，手机端：
+        pip install https://your.host/xxx-cp311-cp311-android_24_arm64_v8a.whl
+      或  pip index https://your.host/simple/  然后  pip install lxml
+  ✓ pip install 支持 wheel 直链（不经过索引）
+  ✓ 纯 Python 包照旧：pip install requests
+  ✓ 页面长按不再整页全选（只输入框/编辑器/预览可选中）
+
+这个终端是什么：
+  ✓ 真实进程的 Android shell（mksh + toybox）+ 内置 Python 3.11 + JS + 文件面板
+  ⚠ 不是 Linux 发行版：没有 apt/bash/root/PTY，装不了 Ubuntu
+  caps 看完整能力清单
+
+装好后：我的 → 终端
+  - pip install <包> / <wheel 直链>；pip list；pip uninstall
+  - 顶栏 📁：文件面板（长按 .sh/.py/.js 直接执行）
+  - 输入时按键条：Ctrl / Tab / ^C / ^D / ^L / 方向键
+  - 双击终端：常用命令；长按输出行：复制/加入常用命令/填入/执行
+  - pyinfo 看 Python；caps 看能力边界
+
+如果 Python 起不来：把 pyinfo 的红字发我，或 USB 连电脑跑：
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\check-phone.ps1

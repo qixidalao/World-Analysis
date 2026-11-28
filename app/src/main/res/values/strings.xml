@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 官方名：界析（JieXi），寓意「世界解析器」 -->
+    <string name="app_name">界析</string>
+    <string name="app_name_en">JieXi</string>
+    <string name="app_slogan">世界解析器 · 可编程解析客户端</string>
+</resources>

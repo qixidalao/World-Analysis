@@ -1,0 +1,1335 @@
+<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0B1116">
+<title>解析器 · 原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+--bg:#0B1116;--surface:#141B22;--surface2:#1D2831;--line:#1E2831;
+--txt:#E6EDF3;--txt2:#A9B6BF;--txt3:#8A8F98;--accent:#FF5A3C;
+--ok:#4CAF50;--warn:#FFB300;--err:#FF5252;--info:#7DD3FC;
+--r-s:8px;--r-m:12px;--r-l:16px;--r-full:999px;
+}
+html{height:auto;min-height:100%}
+body{min-height:100vh;overflow-x:hidden;overflow-y:auto;
+ background:#05080b;color:var(--txt);font:400 14px/20px -apple-system,"PingFang SC","Noto Sans SC",sans-serif;
+ display:flex;justify-content:center}
+#phone{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden}
+/* 细滚动条（深色适配，始终可见） */
+*{scrollbar-width:thin;scrollbar-color:#2f3d49 #0b1116}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#0b1116}
+::-webkit-scrollbar-thumb{background:#2f3d49;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#3d4f5e}
+@media (max-width:430px){::-webkit-scrollbar{width:5px}}
+/* ---------- 布局 ---------- */
+#view{padding-bottom:calc(72px + env(safe-area-inset-bottom));min-height:100vh}
+.topbar{position:sticky;top:0;z-index:30;height:56px;display:flex;align-items:center;gap:10px;
+ padding:0 14px;background:linear-gradient(180deg,#0b1116f7,#0b1116e6 70%,transparent);
+ backdrop-filter:blur(14px)}
+.topbar .site{display:flex;align-items:center;gap:5px;font:800 17px/23px inherit;flex:1;min-width:0}
+.topbar .site i{font-style:normal;color:var(--txt3);font-size:12px}
+.topbar .ico{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--txt2)}
+.dot{width:6px;height:6px;border-radius:99px;background:var(--err);display:inline-block;margin-left:4px}
+/* 频道胶囊 */
+.channels{display:flex;gap:8px;overflow-x:auto;padding:2px 14px 8px;scrollbar-width:none}
+.channels::-webkit-scrollbar{display:none}
+.channels b{flex:0 0 auto;padding:7px 13px;border-radius:var(--r-full);background:var(--surface);
+ border:1px solid var(--line);color:#cbd5db;font:500 13px/18px inherit;transition:.12s}
+.channels b.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+/* 轮播 */
+.hero{position:relative;margin:4px 14px 0;height:200px;border-radius:var(--r-l);overflow:hidden;background:#101820}
+.hero .s{position:absolute;inset:0;background-size:cover;background-position:center;
+ opacity:0;transition:opacity .7s ease;display:flex;align-items:flex-end;padding:16px}
+.hero .s.on{opacity:1}
+.hero .ov{position:absolute;inset:0;background:linear-gradient(90deg,#071319e8,#07131915 62%),
+ linear-gradient(0deg,#071319e0,transparent 58%)}
+.hero .cap{position:relative;z-index:2;width:100%}
+.hero .cap h2{font:800 20px/26px inherit;margin-bottom:5px;text-shadow:0 2px 12px #000a}
+.hero .cap p{font:400 12px/17px inherit;color:#cfd9df;display:-webkit-box;-webkit-line-clamp:2;
+ -webkit-box-orient:vertical;overflow:hidden}
+.hero .dots{position:absolute;right:14px;bottom:16px;display:flex;gap:5px;z-index:3}
+.hero .dots i{width:6px;height:6px;border-radius:99px;background:#fff6;transition:.3s}
+.hero .dots i.on{width:16px;background:#fff}
+/* 分区 */
+.sec{padding:16px 14px 0}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-h h3{font:700 17px/23px inherit;display:flex;align-items:center;gap:6px}
+.sec-h h3::before{content:'';width:3px;height:15px;border-radius:2px;background:var(--accent)}
+.sec-h s{font:400 12px/17px inherit;color:var(--txt3);text-decoration:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--surface);border-radius:var(--r-m);overflow:hidden;transition:.15s}
+.card:active{transform:scale(.975)}
+.card .ph{position:relative;aspect-ratio:16/10;overflow:hidden}
+.card .ph .g{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+ font:800 28px/1 inherit;color:#ffffff3d}
+.card .ph em{position:absolute;right:6px;bottom:6px;font:400 10px/14px inherit;font-style:normal;
+ background:#000a;padding:2px 6px;border-radius:5px;color:#e2eaef}
+.card .tt{padding:8px 9px 10px;font:400 13px/18px inherit;color:#e2e9ee;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* 通用 */
+.row{display:flex;align-items:center;height:56px;padding:0 16px;gap:12px;
+ border-bottom:1px solid var(--line);background:var(--surface)}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0;font:400 14px/20px inherit}
+.row .t small{display:block;color:var(--txt3);font-size:11px;line-height:15px;margin-top:2px}
+.row .v{color:var(--txt3);font-size:12px}
+.row .arw{color:var(--txt3);font-size:16px}
+.group{margin:12px 14px;border-radius:var(--r-m);overflow:hidden;border:1px solid var(--line)}
+.group .gh{padding:8px 16px 4px;font:700 12px/17px inherit;color:var(--txt3);letter-spacing:.4px}
+.seg{display:flex;gap:4px;background:var(--surface2);padding:3px;border-radius:var(--r-s)}
+.seg b{flex:1;text-align:center;font:500 12px/16px inherit;padding:6px 0;border-radius:6px;color:var(--txt2)}
+.seg b.on{background:var(--accent);color:#fff;font-weight:700}
+.sw{width:44px;height:26px;border-radius:99px;background:#2a3742;position:relative;flex:0 0 auto;transition:.15s}
+.sw.on{background:var(--accent)}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:99px;
+ background:#fff;transition:.15s}
+.sw.on::after{left:21px}
+.btn{height:44px;border-radius:var(--r-m);display:flex;align-items:center;justify-content:center;
+ gap:6px;font:700 15px/1 inherit;background:var(--accent);color:#fff}
+.btn.g{background:var(--surface);color:var(--txt);border:1px solid var(--line);font-weight:500}
+.btn.d{background:#3a1f1f;color:#ff8a80}
+.muted{color:var(--txt3)}
+.pill{display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;line-height:14px}
+.pill.ok{background:#12351f;color:#6ee7a0}
+.pill.bl{background:#122a3a;color:#7dd3fc}
+.pill.rd{background:#3a1f1f;color:#ff8a80}
+/* Tab bar */
+#tabs{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;height:56px;
+ display:flex;background:#0b1116f2;border-top:1px solid var(--line);backdrop-filter:blur(14px);z-index:40;
+ padding-bottom:env(safe-area-inset-bottom)}
+#tabs div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+ font:400 10px/14px inherit;color:var(--txt3)}
+#tabs div.on{color:var(--accent)}
+#tabs div span{font-size:19px;line-height:1}
+/* 宫格 */
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 14px}
+.tile{height:92px;border-radius:var(--r-m);background:var(--surface);border:1px solid var(--line);
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative}
+.tile:active{background:var(--surface2)}
+.tile b{font-size:26px;line-height:1}
+.tile s{font:400 12px/16px inherit;text-decoration:none;color:var(--txt2)}
+.tile i{position:absolute;top:8px;right:9px;font:400 10px/1 inherit;font-style:normal;color:var(--txt3)}
+/* 浮层 */
+#sheet{position:fixed;inset:0;z-index:60;display:none}
+#sheet.on{display:block}
+#sheet .mask{position:absolute;inset:0;background:#000a;backdrop-filter:blur(2px)}
+#sheet .pane{position:absolute;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;
+ background:var(--bg);border-radius:var(--r-l) var(--r-l) 0 0;padding:8px 0 24px;
+ max-height:88vh;overflow-y:auto;overscroll-behavior:contain;
+ transform:translateY(100%);transition:transform .28s ease;
+ padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+#sheet.on .pane{transform:none}
+#sheet .grab{width:40px;height:4px;border-radius:99px;background:#2c3a45;margin:6px auto 10px;
+ position:sticky;top:0;z-index:2}
+#sb{position:fixed;right:2px;top:0;bottom:0;width:4px;z-index:120;pointer-events:none;
+ opacity:0;transition:opacity .25s}
+#sb.on{opacity:1}
+#sb i{position:absolute;left:0;width:100%;border-radius:3px;background:#5a6b7a;
+ transition:top .05s linear}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);z-index:90;
+ background:#000000e6;color:#fff;font-size:13px;padding:9px 16px;border-radius:99px;opacity:0;
+ transition:.2s;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* 骨架 */
+.sk{background:linear-gradient(90deg,#141b22,#1d2831,#141b22);background-size:200% 100%;
+ animation:sk 1.2s linear infinite;border-radius:var(--r-m)}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* 其他 */
+.empty{padding:60px 24px;text-align:center;color:var(--txt3)}
+.empty b{display:block;font-size:44px;margin-bottom:12px;opacity:.55}
+.empty p{font-size:13px;line-height:20px;margin-bottom:16px}
+.term{background:#080d11;border-radius:var(--r-m);margin:12px 14px;padding:12px;height:340px;overflow:auto;
+ font:400 13px/19px ui-monospace,Menlo,monospace;color:#c8e1ff;white-space:pre-wrap}
+.term .r{color:#ff8a65}
+.term .ok{color:#6ee7a0}
+.termbar{display:flex;gap:8px;overflow-x:auto;padding:0 14px;scrollbar-width:none}
+.termbar::-webkit-scrollbar{display:none}
+.termbar b{flex:0 0 auto;padding:8px 12px;border-radius:var(--r-s);background:var(--surface);
+ border:1px solid var(--line);font:500 12px/16px inherit;color:var(--txt2)}
+.code{background:#080d11;border-radius:var(--r-m);margin:12px 14px;padding:12px;height:420px;overflow:auto;
+ font:400 12px/18px ui-monospace,Menlo,monospace;color:#c8e1ff;white-space:pre;tab-size:4}
+.bar{height:3px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:10px 16px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--txt)}
+.listline{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.listline .ic{width:34px;height:34px;border-radius:9px;background:var(--surface2);display:flex;
+ align-items:center;justify-content:center;font-size:16px}
+.listline .n{flex:1;min-width:0}
+.listline .n b{font:500 13px/18px inherit;display:block}
+.listline .n small{color:var(--txt3);font-size:11px;line-height:15px}
+</style></head><body>
+<div id="phone">
+  <div id="view"></div>
+  <div id="tabs">
+    <div data-t="app"><span>🏠</span>主页</div>
+    <div data-t="browse"><span>🌐</span>浏览</div>
+    <div data-t="fav"><span>❤️</span>收藏</div>
+    <div data-t="mine"><span>👤</span>我的</div>
+  </div>
+</div>
+<div id="sheet"><div class="mask" onclick="closeSheet()"></div><div class="pane" id="pane"></div></div>
+<div id="sb"><i id="sbi"></i></div>
+<div id="toast"></div>
+<script>
+/* ===================== mock 数据 ===================== */
+const GRAD=['linear-gradient(135deg,#ff6b6b,#c92a2a)','linear-gradient(135deg,#4dabf7,#1864ab)',
+'linear-gradient(135deg,#51cf66,#2b8a3e)','linear-gradient(135deg,#fcc419,#e67700)',
+'linear-gradient(135deg,#b197fc,#6741d9)','linear-gradient(135deg,#ff8787,#e03131)',
+'linear-gradient(135deg,#38d9a9,#087f5b)','linear-gradient(135deg,#ffa94d,#d9480f)'];
+const TITLES=['我在緬北當高階主管','OL女友雪莉肉棒調教','被同學強暴的巨乳媽媽 第二季','嫂子別走',
+'辦公室秘書的秘密','鄰家姐姐的誘惑','深夜計程車司機','實習生的第一天','溫泉旅館的邂逅','深夜食堂的常客',
+'學妹的補習時間','總裁的私人保鑣'];
+const SITES=[{id:'demo_site',name:'示例站点',domain:'example.com',icon:'🔥',desc:'9 个分区 · 5 分钟前更新',on:1},
+ {id:'manga_x',name:'某漫画站',domain:'manga.example',icon:'📚',desc:'已停用',on:0},
+ {id:'pic_y',name:'某图站',domain:'pic.example',icon:'🖼',desc:'3 个分区 · 昨天',on:1}];
+let HOME_CFG={welcome:1,cards:1,sites:1,recent:1,notice:1,cardsLayout:'row',siteLayout:'list'};
+const HOME={heroes:[
+ {title:'我在緬北當高階主管',desc:'AI短劇 · 全2集 · 近一小時最熱一集 384 次觀看',url:'detail'},
+ {title:'隱身，目標操校花',desc:'短劇 · 全12集 · 1.2萬次觀看',url:'detail'},
+ {title:'被同學強暴的巨乳媽媽 第二季',desc:'日本 · 全8集',url:'detail'}],
+ cats:['首页','國產AV','探花','自拍流出','日本','OnlyFans','AI短劇','中文字幕'],
+ sections:[
+  {title:'國產AV',n:8},{title:'探花',n:6},{title:'日本',n:6}]};
+const MODULES=[{pkg:'requests',ver:'2.34.2',lv:'pure',sz:'58 KB'},
+ {pkg:'lxml',ver:'6.1.3',lv:'android',sz:'9.4 MB'},
+ {pkg:'numpy',ver:'2.5.5',lv:'android',sz:'14.2 MB'}];
+const SCRIPTS=[{id:'demo_site',name:'示例站点',lang:'PY',dom:'example.com',on:1,sec:271},
+ {id:'manga_x',name:'某漫画站',lang:'PY',dom:'manga.example',on:0,sec:132}];
+
+/* ===================== 路由 ===================== */
+let STACK=[], CURTAB='home';
+function go(fn,opts){ STACK.push({fn:fn}); renderTop(); if(!opts||!opts.keepScroll) window.scrollTo(0,0); }
+function back(){ if(STACK.length){STACK.pop(); renderTop(); } }
+function re(){ if(STACK.length){ STACK[STACK.length-1].fn(); } else { TABS[CURTAB](); } }
+function renderTop(){ const t=STACK.length?STACK[STACK.length-1].fn:TABS[CURTAB]; t(); if(window.updSB)setTimeout(updSB,30); }
+const TABS={};
+
+/* ===================== 组件片段 ===================== */
+function ph(i,t){ return `<div class=g style="background:${GRAD[i%GRAD.length]}">${(t||'肉').slice(0,1)}</div>`; }
+function card(i,t,dur){ return `<div class=card onclick="go(()=>pgDetail(${i}))">
+  <div class=ph>${ph(i,t)}${dur?`<em>${dur}</em>`:''}</div>
+  <div class=tt>${t}</div></div>`; }
+function topbar(title,site){ return `<div class=topbar>
+  ${title?'<div class=back onclick="back()">‹</div>':''}
+  ${site?`<div class="site" onclick="openSite()">${site}<i>▾</i></div>`:`<div class=site>${title}</div>`}
+  ${site?'<div class=ico" onclick="go(()=>pgSearch())">🔍</div><div class=ico onclick="openMore()">⋮</div>':''}
+</div>`; }
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('on');
+ clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),1600); }
+function openSheet(html){ document.getElementById('pane').innerHTML=
+  '<div class=grab></div>'+html; document.getElementById('sheet').classList.add('on'); }
+function closeSheet(){ document.getElementById('sheet').classList.remove('on'); }
+function openSite(){ openSheet(`<div style="padding:6px 8px 2px 18px;font:700 12px/17px inherit;color:var(--txt3)">切换站点</div>`
+ + SITES.map(s=>`<div class=row onclick="pickSite('${s.name}')"><div class=t>${s.name}<small>${s.domain}</small></div>
+   ${CURTAB==='home'?'<span class=pill ok>使用中</span>':''}<div class=arw>›</div></div>`).join('')
+ + `<div class=row onclick="closeSheet();go(()=>pgScripts())"><div class=t>＋ 管理脚本</div><div class=arw>›</div></div>`); }
+function pickSite(n){ closeSheet(); CUR_SITE=n; toast('已切到 '+n); STACK=[]; TABS.browse(); }
+function openMore(){ openSheet(`<div class=row onclick="closeSheet();go(()=>pgSettings())"><div class=t>设置</div><div class=arw>›</div></div>
+ <div class=row onclick="closeSheet();toast('已刷新')"><div class=t>刷新当前页</div><div class=arw>›</div></div>
+ <div class=row onclick="closeSheet();openSite()"><div class=t>切换站点</div><div class=arw>›</div></div>
+ <div class=row onclick="closeSheet();go(()=>pgAbout())"><div class=t>关于</div><div class=arw>›</div></div>`); }
+
+/* ===================== T-1 主页（应用门面） ===================== */
+let heroIdx=0, heroTimer=null;
+
+TABS.app=function(){
+  clearInterval(heroTimer);
+  const cfg=HOME_CFG;
+  const v=document.getElementById('view');
+  v.innerHTML=`
+   <div class=topbar>
+     <div class=site style="flex:1"><b style="font:800 18px/24px inherit">解析器</b>
+       <span style="font-size:11px;color:var(--txt3);margin-left:2px">v1.0</span></div>
+     <div class="site" onclick="openSite()" style="flex:0 0 auto;font:600 14px/20px inherit">
+       示例站点<i>▾</i></div>
+     <div class=ico onclick="editHome()">🎨</div>
+   </div>
+   ${cfg.welcome?`<div style="padding:6px 16px 14px">
+     <div style="font:800 22px/29px inherit;margin-bottom:6px">可编程解析客户端</div>
+     <div style="font-size:12px;line-height:19px;color:var(--txt2)">
+       内置完整 Python 解释器 · 一个脚本就是一个站点<br>
+       脚本可在手机里写、改、调、装包</div>
+   </div>`:''}
+   ${cfg.cards?`<div style="padding:0 14px">
+     <div style="display:grid;grid-template-columns:repeat(${cfg.cardsLayout==='row'?3:2},1fr);gap:10px">
+       ${[['🐍','终端','调试','go(()=>pgTerm())'],['📦','模块','3','go(()=>pgModules())'],
+          ['📜','脚本','2','go(()=>pgScripts())'],['⚙️','设置','','go(()=>pgSettings())'],
+          ['🧹','缓存','12.4M',"toast('已清理 12.4 MB')"],['📋','日志','',"go(()=>pgLogs())"]]
+         .map(c=>`<div class=tile onclick="${c[3]}" style="height:${cfg.cardsLayout==='row'?'80px':'92px'}">
+            <b>${c[0]}</b><s>${c[1]}</s>${c[2]?`<i>${c[2]}</i>`:''}</div>`).join('')}
+     </div></div>`:''}
+   ${cfg.sites?`<div class=sec><div class=sec-h><h3>我的站点</h3>
+       <s onclick="go(()=>pgScripts())">管理 ›</s></div>
+     ${cfg.siteLayout==='list'
+       ? SITES.map((x,i)=>`<div class=card style="margin-bottom:10px" onclick="openSiteTab(${i})">
+           <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:${GRAD[i%GRAD.length]}1a">
+             <div style="width:44px;height:44px;border-radius:12px;background:${GRAD[i%GRAD.length]};
+               display:flex;align-items:center;justify-content:center;font-size:20px">${x.icon}</div>
+             <div style="flex:1;min-width:0">
+               <div style="font:700 15px/21px inherit;display:flex;align-items:center;gap:6px">${x.name}
+                 ${x.on?'<span class="pill ok">启用</span>':'<span class="pill">停用</span>'}</div>
+               <div style="font-size:11px;color:var(--txt3);margin-top:2px">${x.domain} · ${x.desc}</div>
+             </div>
+             <div class=arw>→</div></div></div>`).join('')
+       : `<div class=grid>${SITES.map((x,i)=>`<div class=card onclick="openSiteTab(${i})">
+            <div class=ph><div class=g style="background:${GRAD[i%GRAD.length]}">${x.icon}</div></div>
+            <div class=tt>${x.name}<div style="font-size:11px;color:var(--txt3);margin-top:2px">${x.domain}</div></div>
+           </div>`).join('')}</div>`}
+     <div class=row style="margin-top:8px;border:1px dashed var(--line);border-radius:12px;height:48px;justify-content:center;
+        color:var(--txt3);font-size:13px" onclick="go(()=>pgNewScript())">＋ 添加站点（新建脚本）</div>
+   </div>`:''}
+   ${cfg.recent?`<div class=sec><div class=sec-h><h3>继续观看</h3><s>全部 ›</s></div>
+     <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:4px">
+       ${[0,3,5].map(i=>`<div style="flex:0 0 128px" onclick="go(()=>pgDetail(${i}))">
+         <div style="aspect-ratio:16/10;border-radius:10px;background:${GRAD[i%GRAD.length]};margin-bottom:6px"></div>
+         <div style="font-size:12px;line-height:17px;color:var(--txt2);display:-webkit-box;-webkit-line-clamp:2;
+           -webkit-box-orient:vertical;overflow:hidden">${TITLES[i]}</div>
+         <div style="height:3px;border-radius:9px;background:var(--surface2);margin-top:5px">
+           <i style="display:block;height:100%;width:${35+i*15}%;background:var(--accent);border-radius:9px"></i></div>
+       </div>`).join('')}
+     </div></div>`:''}
+   ${cfg.notice?`<div style="margin:16px 14px;padding:12px 14px;border-radius:12px;background:var(--surface);
+      border:1px solid var(--line);font-size:12px;line-height:19px;color:var(--txt2)">
+     <b style="color:var(--txt)">站点网络提示</b><br>
+     example.com 当前 DNS 被污染，若打不开请到「设置 · 网络」切换为 DoH+代理。
+   </div>`:''}
+   <div style="text-align:center;padding:10px 0 20px;font-size:11px;color:var(--txt3)">
+     解析器 v1.0.0 · 本工具仅用于个人学习</div>`;
+  setTab('app');
+};
+function openSiteTab(i){
+  const x=SITES[i];
+  if(!x.on){ toast(x.name+' 已停用，请先启用脚本'); return; }
+  CUR_SITE=x.name; STACK=[]; TABS.browse();
+}
+
+/* ===================== T-2 浏览（当前站点内容） ===================== */
+TABS.browse=function(){
+  clearInterval(heroTimer);
+  const v=document.getElementById('view');
+  v.innerHTML=`<div class=topbar>
+     <div class="site" style="flex:1" onclick="openSite()">
+       <span style="font:800 17px/23px inherit">${CUR_SITE||'示例站点'}</span><i>▾</i></div>
+     <div class=ico onclick="go(()=>pgSearch())">🔍</div>
+     <div class=ico onclick="openMore()">⋮</div>
+   </div>`+
+   `<div class=channels>${HOME.cats.map((c,i)=>`<b class="${i===0?'on':''}" onclick="pickCat(this)">${c}</b>`).join('')}</div>`+
+   `<div style="display:flex;gap:8px;padding:0 14px 6px;font-size:11px;color:var(--txt3)">
+      演示：<b onclick="go(()=>pgImages(0))" style="color:var(--info)">图片</b>
+      <b onclick="go(()=>pgAudio())" style="color:var(--info)">音频</b>
+      <b onclick="go(()=>pgBook())" style="color:var(--info)">小说</b></div>`+
+   `<div class=hero id=hero>${HOME.heroes.map((h,i)=>
+      `<div class="s ${i===0?'on':''}" style="background:${GRAD[i%GRAD.length]}" onclick="go(()=>pgDetail(${i}))">
+        <div class=ov></div><div class=cap><h2>${h.title}</h2><p>${h.desc}</p></div></div>`).join('')}
+      <div class=dots>${HOME.heroes.map((_,i)=>`<i class="${i===0?'on':''}"></i>`).join('')}</div></div>`+
+   HOME.sections.map((s,si)=>`<div class=sec>
+      <div class=sec-h><h3>${s.title}</h3><s onclick="go(()=>pgList('${s.title}'))">更多 ›</s></div>
+      <div class=grid>${Array.from({length:s.n},(_,i)=>card(si*8+i,TITLES[(si*8+i)%TITLES.length],(i%3===0?'42分':''))).join('')}</div>
+    </div>`).join('');
+  setTab('browse'); startHero();
+};
+let CUR_SITE='示例站点';
+function pickCat(el){ document.querySelectorAll('.channels b').forEach(b=>b.classList.remove('on'));
+ el.classList.add('on'); go(()=>pgList(el.textContent)); }
+function startHero(){ clearInterval(heroTimer);
+ const ss=document.querySelectorAll('#hero .s'), dd=document.querySelectorAll('#hero .dots i');
+ if(ss.length<2)return; heroIdx=0;
+ heroTimer=setInterval(()=>{ heroIdx=(heroIdx+1)%ss.length;
+  ss.forEach((e,i)=>e.classList.toggle('on',i===heroIdx));
+  dd.forEach((e,i)=>e.classList.toggle('on',i===heroIdx)); },4000); }
+
+/* ---- V-09 主页自定义 ---- */
+function editHome(){
+  const rows=[['welcome','欢迎语'],['cards','功能卡'],['sites','我的站点'],['recent','继续观看'],['notice','公告']];
+  openSheet(`<div style="padding:0 16px 6px">
+    <div style="font:700 15px/21px inherit;margin-bottom:10px">主页自定义</div>
+    <div class=group style="margin:0 0 12px">
+      ${rows.map(r=>`<div class=row><div class=t>${r[1]}</div>
+        <div class="sw ${HOME_CFG[r[0]]?'on':''}" onclick="toggleHome('${r[0]}',this)"></div></div>`).join('')}
+    </div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:6px">功能卡布局</div>
+    <div class=seg style="margin-bottom:12px">
+      <b class="${HOME_CFG.cardsLayout==='row'?'on':''}" onclick="setCardsLayout('row')">一行三个</b>
+      <b class="${HOME_CFG.cardsLayout==='grid'?'on':''}" onclick="setCardsLayout('grid')">两行两列</b></div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:6px">站点布局</div>
+    <div class=seg style="margin-bottom:14px">
+      <b class="${HOME_CFG.siteLayout==='list'?'on':''}" onclick="setSiteLayout('list')">列表卡片</b>
+      <b class="${HOME_CFG.siteLayout==='grid'?'on':''}" onclick="setSiteLayout('grid')">网格卡片</b></div>
+    <div class=btn onclick="closeSheet();TABS.app()">完成</div>
+  </div>`);
+}
+function toggleHome(k,el){ HOME_CFG[k]=HOME_CFG[k]?0:1; el.classList.toggle('on'); }
+function setCardsLayout(v){ HOME_CFG.cardsLayout=v; editHome(); }
+function setSiteLayout(v){ HOME_CFG.siteLayout=v; editHome(); }
+
+/* ===================== T-3 分类 ===================== */
+
+TABS.cats=function(){
+  const cats=['國產AV','探花','自拍流出','日本','OnlyFans','AI短劇','中文字幕','現代','單體作品',
+   '都市','熟女','中出','巨乳','大男主','麻豆傳媒','素人','自慰','角色扮演'];
+  document.getElementById('view').innerHTML=topbar('分类')+
+   `<div style="padding:8px 14px 4px"><div class=seg><b class=on>全部</b><b>按热度</b><b>按字母</b></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px">
+    ${cats.map(c=>`<div class=row onclick="go(()=>pgList('${c}'))" style="border:1px solid var(--line);border-radius:12px;height:52px">
+      <div class=t>${c}</div><div class=arw>›</div></div>`).join('')}</div>`;
+  setTab('cats'); clearInterval(heroTimer);
+};
+
+/* ===================== T-3 收藏 ===================== */
+TABS.fav=function(){
+  document.getElementById('view').innerHTML=topbar('收藏')+
+   `<div style="padding:8px 14px"><div class=seg><b class=on>收藏</b><b>历史</b></div></div>
+    <div class=sec><div class=grid>
+    ${Array.from({length:6},(_,i)=>card(i,TITLES[i])).join('')}</div></div>
+    <div class=sec><div class=sec-h><h3>历史</h3><s>清空</s></div>
+    ${[0,1,2].map(i=>`<div class=listline"><div class=ic>▶</div><div class=n>
+      <b>${TITLES[i]}</b><small>看到 12:34 · 昨天</small></div><div class=arw>›</div></div>`).join('')}</div>`;
+  setTab('fav'); clearInterval(heroTimer);
+};
+
+/* ===================== T-4 我的 ===================== */
+TABS.mine=function(){
+  clearInterval(heroTimer);
+  document.getElementById('view').innerHTML=topbar('我的')+`
+   <div style="display:flex;align-items:center;gap:14px;padding:8px 16px 18px" onclick="editProfile()">
+     <div style="width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#FF5A3C,#c92a2a);
+       display:flex;align-items:center;justify-content:center;font-size:30px">🐍</div>
+     <div style="flex:1;min-width:0">
+       <div style="font:800 19px/25px inherit">夜猫子 <span style="font-size:11px;color:var(--txt3)">✎</span></div>
+       <div style="font-size:12px;color:var(--txt3);margin-top:4px">加入 12 天 · 3 个站点 · 2 个脚本</div>
+     </div>
+     <div class=arw>›</div>
+   </div>
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 14px">
+     ${[['12','部影片'],['3.5','小时'],['86','条历史']].map(a=>`
+       <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 0;text-align:center">
+         <div style="font:800 20px/26px inherit">${a[0]}</div>
+         <div style="font-size:11px;color:var(--txt3);margin-top:3px">${a[1]}</div></div>`).join('')}
+   </div>
+   <div class=sec><div class=sec-h><h3>我的内容</h3></div>
+     <div class=group style="margin:0 14px">
+       <div class=row onclick="TABS.fav()"><div class=t>❤️ 收藏</div><div class=v>24</div><div class=arw>›</div></div>
+       <div class=row onclick="TABS.fav()"><div class=t>🕘 历史</div><div class=v>86</div><div class=arw>›</div></div>
+       <div class=row onclick="toast('暂无下载任务')"><div class=t>⤓ 下载</div><div class=v>0</div><div class=arw>›</div></div>
+     </div></div>
+   <div class=sec><div class=sec-h><h3>个性化</h3></div>
+     <div class=group style="margin:0 14px">
+       <div class=row onclick="go(()=>pgSetUI())"><div class=t>主题与强调色</div><div class=v>深色</div><div class=arw>›</div></div>
+       <div class=row onclick="go(()=>pgSetUI())"><div class=t>字号</div><div class=v>100%</div><div class=arw>›</div></div>
+       <div class=row onclick="editHome()"><div class=t>主页布局</div><div class=v>自定义</div><div class=arw>›</div></div>
+       <div class=row onclick="go(()=>pgSetPlay())"><div class=t>播放偏好</div><div class=v>自动 · 128MB</div><div class=arw>›</div></div>
+     </div></div>
+   <div class=sec><div class=sec-h><h3>其他</h3></div>
+     <div class=group style="margin:0 14px 20px">
+       <div class=row onclick="go(()=>pgSetStorage())"><div class=t>存储与导出</div><div class=v>128 MB</div><div class=arw>›</div></div>
+       <div class=row onclick="go(()=>pgAbout())"><div class=t>关于</div><div class=v>v1.0.0</div><div class=arw>›</div></div>
+       <div class=row onclick="toast('打开反馈页')"><div class=t>反馈与建议</div><div class=arw>›</div></div>
+     </div></div>
+   <div style="text-align:center;padding:6px 0 16px;font-size:11px;color:var(--txt3)">解析器 v1.0.0</div>`;
+  setTab('mine');
+};
+
+/* ---- V-10 个人资料 ---- */
+function editProfile(){
+  openSheet(`<div style="padding:0 16px 10px">
+    <div style="font:700 15px/21px inherit;margin-bottom:12px">个人资料</div>
+    <div class=row style="border:1px solid var(--line);border-radius:12px;height:48px">
+      <div class=t>昵称</div>
+      <input value="夜猫子" style="text-align:right;background:transparent;border:0;outline:0;
+        color:var(--txt);font-size:14px;width:140px"></div>
+    <div style="height:14px"></div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:8px">头像</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      ${['🐍','🔥','📚','😼','🎬','🖼'].map((e,i)=>`<div onclick="pickAvatar(this)"
+        style="width:44px;height:44px;border-radius:14px;background:var(--surface);border:${i===0?'2px solid var(--accent)':'1px solid var(--line)'};
+        display:flex;align-items:center;justify-content:center;font-size:20px">${e}</div>`).join('')}
+    </div>
+    <div class=btn onclick="closeSheet();toast('已保存')">保存</div>
+  </div>`);
+}
+function pickAvatar(el){ document.querySelectorAll('#pane div[onclick^=pickAvatar]').forEach(d=>{
+  d.style.border='1px solid var(--line)'; d.style.borderWidth='1px';});
+  el.style.border='2px solid var(--accent)'; }
+
+function setTab(t){ CURTAB=t; document.querySelectorAll('#tabs div').forEach(d=>
+ d.classList.toggle('on',d.dataset.t===t)); }
+document.querySelectorAll('#tabs div').forEach(d=>d.onclick=()=>{
+ if(STACK.length){STACK=[];} TABS[d.dataset.t](); window.scrollTo(0,0); });
+</script>
+<script>
+/* ===================== P-01 列表 ===================== */
+function pgList(title){
+  document.getElementById('view').innerHTML=topbar(title)+
+   `<div style="padding:0 14px 6px;color:var(--txt3);font-size:12px">${title} · 24 个结果</div>
+    <div class=sec style="padding-top:6px"><div class=grid>
+    ${Array.from({length:12},(_,i)=>card(i,TITLES[i],(i%4===0?'38分':''))).join('')}</div></div>
+    <div style="text-align:center;padding:18px;color:var(--txt3);font-size:12px">— 到底了 —</div>`;
+}
+
+/* ===================== P-02 详情 ===================== */
+function pgDetail(i){
+  const t=TITLES[i%TITLES.length];
+  document.getElementById('view').innerHTML=`
+   <div style="position:relative;height:230px;background:${GRAD[i%GRAD.length]}">
+     <div style="position:absolute;inset:0;background:linear-gradient(0deg,var(--bg),transparent 72%)"></div>
+     <div class=back style="position:absolute;left:12px;top:12px;background:#0009;border-radius:99px;width:34px;height:34px" onclick="back()">‹</div>
+   </div>
+   <div style="padding:0 16px;margin-top:-26px;position:relative">
+     <h1 style="font:800 20px/26px inherit;margin-bottom:8px">${t}</h1>
+     <div style="font-size:12px;color:var(--txt3);margin-bottom:10px">AI短劇 · 全 2 集 · 近一小時最熱 384 次觀看</div>
+     <p style="font-size:13px;line-height:20px;color:var(--txt2);margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">
+       在緬北的權謀之夜，主管用腦洞般的佈局掌控整座地下宮殿。燈光映照著職場與慾望的交織，權杖與肌膚的碰撞在密室中迴盪。</p>
+     <div class=btn onclick="openPlayer('${t}')">▶ 立即播放</div>
+     <div style="height:10px"></div>
+     <div style="display:flex;gap:10px">
+       <div class="btn g" style="flex:1" onclick="toast('已收藏')">♥ 收藏</div>
+       <div class="btn g" style="flex:1" onclick="toast('已复制链接')">⤴ 分享</div>
+     </div>
+   </div>
+   <div class=sec><div class=sec-h><h3>选集</h3><s>共 2 集</s></div>
+     <div style="display:flex;gap:8px;flex-wrap:wrap">
+       ${[1,2].map(n=>`<div style="padding:9px 16px;border-radius:9px;background:var(--surface);border:1px solid var(--line);font-size:12px"
+         onclick="openPlayer('${t} · 第${n}集')">第 ${n} 集</div>`).join('')}
+     </div></div>
+   <div class=sec><div class=sec-h><h3>相关推荐</h3></div>
+     <div class=grid>${[1,2].map(k=>card(i+k,TITLES[(i+k)%TITLES.length])).join('')}</div></div>
+   <div style="height:20px"></div>`;
+}
+
+/* ===================== P-24 播放器（专属全屏页面） ===================== */
+const TEST_SRCS=[
+ 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+ 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+ 'https://www.w3schools.com/html/mov_bbb.mp4'
+];
+function pgPlayer(title){
+  clearInterval(heroTimer);
+  document.getElementById('view').innerHTML=`
+   <div style="display:flex;flex-direction:column;height:100vh;background:#000">
+     <div style="flex:0 0 auto;height:50px;display:flex;align-items:center;gap:8px;padding:0 12px;
+       background:linear-gradient(180deg,#000c,transparent);position:relative;z-index:2">
+       <div onclick="back()" style="width:32px;font-size:20px;color:#fff">‹</div>
+       <div style="flex:1;min-width:0;color:#fff;font:600 14px/20px inherit;white-space:nowrap;
+         overflow:hidden;text-overflow:ellipsis">${title||'播放'}</div>
+       <div onclick="pgPlayerMenu()" style="width:32px;text-align:center;color:#fff;font-size:17px">⋮</div>
+     </div>
+     <div style="flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
+       <video id=pv controls playsinline preload="metadata"
+         style="display:block;width:100%;max-height:100%;background:#000"></video>
+       <div id=pvmsg style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+         color:#8a8f98;font-size:12px;pointer-events:none;background:#000a">正在加载测试源…</div>
+     </div>
+     <div style="flex:0 0 auto;background:#0d141a;border-top:1px solid #1a2229">
+       <div style="display:flex;align-items:center;gap:10px;padding:8px 14px 2px">
+         <span id=ptime style="font:400 11px/16px ui-monospace,monospace;color:#8a8f98">00:00</span>
+         <div id=pseek style="flex:1;height:3px;border-radius:9px;background:#2a3742;position:relative"
+           onclick="seekTo(event)">
+           <i id=pbar style="position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);border-radius:9px"></i>
+         </div>
+         <span id=pdur style="font:400 11px/16px ui-monospace,monospace;color:#8a8f98">--:--</span>
+       </div>
+       <div style="display:flex;gap:8px;overflow-x:auto;padding:6px 14px 12px;scrollbar-width:none">
+         <b onclick="cycleRate()" style="flex:0 0 auto;padding:7px 12px;border-radius:8px;background:#1a2229;
+           color:#c8d4de;font:500 12px/16px inherit">倍速 <span id=prate>1.0</span>×</b>
+         <b onclick="toggleSub()" style="flex:0 0 auto;padding:7px 12px;border-radius:8px;background:#1a2229;
+           color:#c8d4de;font:500 12px/16px inherit">字幕</b>
+         <b onclick="toast('选源：线路2')" style="flex:0 0 auto;padding:7px 12px;border-radius:8px;background:#1a2229;
+           color:#c8d4de;font:500 12px/16px inherit">选源</b>
+         <b onclick="toast('已记录片头结束点 95s')" style="flex:0 0 auto;padding:7px 12px;border-radius:8px;
+           background:#1a2229;color:#c8d4de;font:500 12px/16px inherit">设片头</b>
+         <b onclick="toast('已记录片尾开始点 1380s')" style="flex:0 0 auto;padding:7px 12px;border-radius:8px;
+           background:#1a2229;color:#c8d4de;font:500 12px/16px inherit">设片尾</b>
+       </div>
+     </div>
+   </div>`;
+  const v=document.getElementById('pv'), msg=document.getElementById('pvmsg');
+  const bar=document.getElementById('pbar')||document.querySelector('#pseek i');
+  const cur=document.getElementById('ptime'), dur=document.getElementById('pdur');
+  let k=0;
+  function tryNext(){
+    if(k>=TEST_SRCS.length){ msg.style.display='flex'; msg.textContent='测试源不可达 · 正式版接站点真实直链'; return; }
+    v.src=TEST_SRCS[k++]; v.load();
+    v.play().then(()=>{ msg.style.display='none'; }).catch(()=>{});
+  }
+  v.addEventListener('error',tryNext);
+  v.addEventListener('loadedmetadata',()=>{ msg.style.display='none';
+    dur.textContent=fmt(v.duration); });
+  v.addEventListener('timeupdate',()=>{
+    cur.textContent=fmt(v.currentTime);
+    const b=document.querySelector('#pseek i');
+    if(b&&v.duration) b.style.width=(v.currentTime/v.duration*100)+'%';
+  });
+  tryNext();
+}
+function fmt(t){ if(!isFinite(t))return '--:--';
+  const m=Math.floor(t/60), s=Math.floor(t%60);
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function seekTo(e){ const el=document.getElementById('pseek'); const v=document.getElementById('pv');
+  if(!el||!v||!v.duration)return;
+  const r=el.getBoundingClientRect();
+  v.currentTime=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))*v.duration; }
+function cycleRate(){ const v=document.getElementById('pv'); if(!v)return;
+  const seq=[1,1.25,1.5,2,0.75];
+  const nxt=seq[(seq.indexOf(v.playbackRate)+1)%seq.length]||1;
+  v.playbackRate=nxt;
+  const el=document.getElementById('prate'); if(el)el.textContent=nxt.toFixed(1).replace('.0','');
+  toast('倍速 '+nxt+'×'); }
+function toggleSub(){ toast('字幕：内置示例.srt · 字号 14 · 双语关'); }
+function pgPlayerMenu(){
+  openSheet(`<div style="padding:0 10px 8px">
+    <div class=row onclick="closeSheet();toast('已切换线路2')"><div class=t>切换线路</div><div class=v>线路1</div></div>
+    <div class=row onclick="closeSheet();toast('画面比例：填充')"><div class=t>画面比例</div><div class=v>适应</div></div>
+    <div class=row onclick="closeSheet();toast('字幕样式')"><div class=t>字幕样式</div><div class=v>字号 14</div></div>
+    <div class=row onclick="closeSheet();toast('已开启自动跳片头')"><div class=t>自动跳片头</div><div class=v>关</div></div>
+    <div class=row onclick="closeSheet();toast('已开启自动跳片尾')"><div class=t>自动跳片尾</div><div class=v>关</div></div>
+    <div class=row onclick="closeSheet();toast('记忆进度已开')"><div class=t>记忆播放进度</div><div class=v>开</div></div>
+  </div>`);
+}
+
+/* ===================== 兼容旧调用 ===================== */
+function openPlayer(title){ go(() => pgPlayer(title)); }
+
+/* ===================== P-03 搜索 ===================== */
+function pgSearch(){
+  document.getElementById('view').innerHTML=topbar('搜索')+
+   `<div style="padding:8px 14px"><div class=row style="border:1px solid var(--line);border-radius:12px;height:44px">
+      <div style="color:var(--txt3)">🔍</div><input placeholder="搜索标题、演员、标签…"
+       style="flex:1;background:transparent;border:0;outline:0;color:var(--txt);font-size:14px">
+      <div style="color:var(--accent);font-size:13px">搜索</div></div></div>
+    <div class=sec><div class=sec-h><h3>历史搜索</h3><s>清空</s></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${['緬北','OL','巨乳','短劇'].map(k=>`<div style="padding:7px 13px;border-radius:99px;background:var(--surface);
+        border:1px solid var(--line);font-size:12px">${k}</div>`).join('')}</div></div>
+    <div class=sec><div class=sec-h><h3>热门标签</h3></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${['國產AV','探花','自拍流出','日本','OnlyFans'].map(k=>`<div style="padding:7px 13px;border-radius:99px;
+        background:var(--surface);border:1px solid var(--line);font-size:12px">${k}</div>`).join('')}</div></div>`;
+}
+
+/* ===================== P-04 脚本列表 ===================== */
+function pgScripts(){
+  document.getElementById('view').innerHTML=topbar('脚本管理')+
+   `<div style="display:flex;gap:10px;padding:8px 14px 12px">
+      <div class="btn g" style="flex:1;height:40px" onclick="toast('打开导入面板')">⤓ 导入</div>
+      <div class="btn" style="flex:1;height:40px" onclick="go(()=>pgNewScript())">＋ 新建</div>
+    </div>
+    ${SCRIPTS.map(s=>`<div class=listline onclick="go(()=>pgScriptEdit('${s.id}'))">
+      <div class=ic>${s.lang==='PY'?'🐍':'📜'}</div>
+      <div class=n><b>${s.name}</b><small>${s.dom} · ${s.sec} 行 · ${s.lang}</small></div>
+      <div class="sw ${s.on?'on':''}" onclick="event.stopPropagation();this.classList.toggle('on')"></div>
+    </div>`).join('')}
+    <div class=sec><div class=sec-h><h3>说明</h3></div>
+      <div style="font-size:12px;line-height:20px;color:var(--txt3)">
+      脚本 = 一个站点。启用后出现在站点切换列表里。<br>
+      支持 Python（主）/ JS（M3 期）。点卡片进入编辑器。</div></div>`;
+}
+
+/* ===================== P-19 新建脚本向导 ===================== */
+const EMOJIS=['🔥','📚','🖼','🎬','📺','🐍','🎧','📖'];
+const UAS=['默认（App）','Android Chrome','iPhone Safari','Windows Chrome','随机 PC','空（不发送）','自定义'];
+let NEW={step:1,type:'rule',name:'',id:'',site:'',icon:'🔥',group:'',
+  iconMode:'emoji',iconUrl:'',uaPreset:'默认（App）',
+  headers:[{k:'User-Agent',v:'默认（App）'},{k:'Referer',v:'同站点'}],
+  ua:'',ref:'',enc:'utf8',
+  listSel:'',itemSel:'',titleSel:'',picSel:'',urlSel:'',
+  detailTitle:'',playRe:'',searchTpl:'',pageParam:'fypage',pageStart:'1',
+  deps:'',code:'',enabled:1};
+function slug(n){ return String(n||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24); }
+function pgNewScript(){
+  const N=NEW;
+  let body='';
+  if(N.step===1){
+    body=`<div style="padding:0 14px">
+      ${[['rule','📋 硬解规则','填选择器即可，不用写代码（默认）'],
+         ['js','📜 JavaScript','写解析函数，生态兼容性最好'],
+         ['py','🐍 Python','内置 CPython，可 pip 装包'],
+         ['import','⤓ 导入现成脚本','URL / 剪贴板 / 文件（兼容海阔规则 JSON）']]
+        .map(t=>`<div class=card style="margin-bottom:10px;${N.type===t[0]?'border:2px solid var(--accent)':''}"
+           onclick="pickType('${t[0]}')">
+          <div style="padding:14px 16px">
+            <div style="font:700 15px/21px inherit;margin-bottom:4px">${t[1]}</div>
+            <div style="font-size:12px;color:var(--txt3);line-height:17px">${t[2]}</div>
+          </div></div>`).join('')}
+    </div>`;
+  } else if(N.step===2){
+    body=`<div class=group style="margin-top:10px"><div class=gh>基本信息</div>
+      <div class=row style="height:52px"><div class=t>名称 <span style="color:var(--err)">*</span></div>
+        <input value="${N.name}" oninput="NEW.name=this.value;if(!NEW.idManual){NEW.id=slug(this.value);var f=document.getElementById('idfield');if(f)f.value=NEW.id}"
+          placeholder="必填，如 示例站点" style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:14px;width:150px"></div>
+      <div class=row style="height:52px"><div class=t>ID<small>只能小写字母数字下划线，建后不可改</small></div>
+        <input value="${N.id||slug(N.name)}" oninput="NEW.id=this.value;NEW.idManual=1"
+          style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt3);font-size:13px;width:120px;font-family:monospace"></div>
+      <div class=row style="height:52px"><div class=t>站点地址 <span style="color:var(--err)">*</span></div>
+        <input value="${N.site}" oninput="NEW.site=this.value" placeholder="https://"
+          style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:13px;width:170px"></div>
+      <div style="padding:12px 16px 4px;display:flex;align-items:center;gap:10px">
+        <div style="flex:0 0 52px;font-size:14px;line-height:20px">图标</div>
+        <div style="flex:1;display:flex;gap:4px;background:var(--surface2);padding:3px;border-radius:8px;height:34px">
+          <div onclick="NEW.iconMode='emoji';re()"
+            style="flex:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;
+            ${N.iconMode!=='url'?'background:var(--accent);color:#fff;font-weight:700':'color:var(--txt2)'}">Emoji</div>
+          <div onclick="NEW.iconMode='url';re()"
+            style="flex:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-size:12px;
+            ${N.iconMode==='url'?'background:var(--accent);color:#fff;font-weight:700':'color:var(--txt2)'}">图片 URL</div>
+        </div>
+      </div>
+      ${N.iconMode==='url'
+        ? `<div style="padding:6px 16px 0"><input value="${N.iconUrl||''}" oninput="NEW.iconUrl=this.value;var pv=document.getElementById('iconpv');if(pv){pv.src=this.value;pv.style.display=this.value?'block':'none'}" placeholder="https://…/logo.png" style="width:100%;height:38px;background:var(--surface2);border:0;outline:0;border-radius:8px;padding:0 10px;color:var(--txt);font-size:12px"></div>
+           <div style="padding:10px 16px 14px;display:flex;align-items:center;gap:10px">
+             <div style="flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:var(--surface2);overflow:hidden;position:relative">
+               <img id="iconpv" src="${N.iconUrl||''}" alt=""
+                 style="display:block;position:absolute;inset:0;width:44px;height:44px;object-fit:cover;${N.iconUrl?'':'display:none'}">
+               ${N.iconUrl?'':'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px">'+N.icon+'</div>'}
+             </div>
+             <div style="flex:1;font-size:11px;line-height:16px;color:var(--txt3)">预览 · 加载失败自动回退所选 Emoji</div>
+           </div>`
+        : `<div style="display:flex;gap:8px;padding:10px 16px 14px;flex-wrap:wrap">${EMOJIS.map(e=>
+             `<div onclick="NEW.icon='${e}';re()" style="width:38px;height:38px;border-radius:10px;
+               background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:18px;
+               box-sizing:border-box;${N.icon===e?'border:2px solid var(--accent)':'border:2px solid transparent'}">${e}</div>`).join('')}</div>`}
+      <div class=row style="height:52px"><div class=t>分组</div>
+        <input value="${N.group}" oninput="NEW.group=this.value" placeholder="影视 / 漫画 / 图站"
+          style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt2);font-size:13px;width:140px"></div>
+    </div>
+    <div class=group><div class=gh>UA 预设</div>
+      <div class=row><div class=t>User-Agent</div>
+        <select onchange="NEW.uaPreset=this.value;re()"
+          style="background:var(--surface2);color:var(--txt);border:0;border-radius:8px;padding:7px 10px;font-size:12px">
+          ${UAS.map(u=>`<option ${N.uaPreset===u?'selected':''}>${u}</option>`).join('')}
+        </select></div>
+      ${N.uaPreset==='自定义'?`<div class=row style="height:52px"><div class=t>UA 值</div>
+        <input value="${N.ua}" oninput="NEW.ua=this.value" placeholder="Mozilla/5.0 …"
+          style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt3);font-size:11px;width:180px"></div>`:''}
+      <div style="padding:0 16px 8px;font-size:11px;color:var(--txt3)">实际生效：${N.uaPreset==='自定义'?(N.ua||'（空）'):N.uaPreset}</div>
+    </div>
+    <div class=group><div class=gh>请求头（任意键值）</div>
+      ${N.headers.map((h,i)=>`<div class=row style="height:48px;gap:8px">
+        <input value="${h.k}" oninput="NEW.headers[${i}].k=this.value" placeholder="键"
+          style="width:96px;background:var(--surface2);border:0;outline:0;border-radius:8px;padding:6px 8px;
+          color:var(--txt);font-size:12px;font-family:monospace">
+        <input value="${h.v}" oninput="NEW.headers[${i}].v=this.value" placeholder="值"
+          style="flex:1;min-width:0;background:var(--surface2);border:0;outline:0;border-radius:8px;padding:6px 8px;
+          color:var(--txt2);font-size:12px">
+        <div onclick="NEW.headers.splice(${i},1);re()"
+          style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+          border-radius:8px;background:#3a1f1f;color:#ff8a80;font-size:13px">✕</div>
+      </div>`).join('')}
+      <div class=row style="height:46px;color:var(--accent);font-size:13px;justify-content:center"
+        onclick="NEW.headers.push({k:'',v:''});re()">＋ 添加请求头</div>
+    </div>
+    <div class=group><div class=gh>编码</div>
+      <div class=row><div class=t>页面编码</div>
+        <div class=seg style="flex:0 0 150px"><b class="${N.enc==='utf8'?'on':''}" onclick="NEW.enc='utf8';re()">UTF-8</b>
+        <b class="${N.enc==='gbk'?'on':''}" onclick="NEW.enc='gbk';re()">GBK</b></div></div>
+    </div>`;
+  } else if(N.step===3){
+    if(N.type==='rule'){
+      const expr=[N.listSel,N.itemSel,N.titleSel?(N.titleSel+'&&Text'):'',N.picSel?(N.picSel+'&&src'):'',N.urlSel?(N.urlSel+'&&href'):'']
+        .filter(Boolean).join(';');
+      body=`<div class=group style="margin-top:10px"><div class=gh>列表规则（CSS 选择器，&amp;&amp; 取子元素）</div>
+        ${[['listSel','列表容器','.post-list'],['itemSel','每一集','li'],['titleSel','标题','h3'],
+           ['picSel','封面','img'],['urlSel','链接','a']]
+          .map(f=>`<div class=row style="height:50px"><div class=t>${f[1]}</div>
+            <input value="${N[f[0]]}" oninput="NEW['${f[0]}']=this.value"
+              placeholder="${f[2]}" style="text-align:right;background:transparent;border:0;outline:0;
+              color:var(--txt);font-size:12px;width:170px;font-family:monospace"></div>`).join('')}
+      </div>
+      ${expr?`<div style="margin:0 14px;padding:10px 12px;border-radius:10px;background:#080d11;
+        font:400 11px/17px ui-monospace,monospace;color:#7dd3fc;word-break:break-all">等价表达式：<br>${expr}</div>`:''}
+      <div class=group><div class=gh>详情与搜索</div>
+        <div class=row style="height:50px"><div class=t>详情标题</div>
+          <input value="${N.detailTitle}" oninput="NEW.detailTitle=this.value" placeholder="h1"
+            style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:12px;width:150px;font-family:monospace"></div>
+        <div class=row style="height:50px"><div class=t>播放地址正则</div>
+          <input value="${N.playRe}" oninput="NEW.playRe=this.value" placeholder="m3u8\\?url=([^&]+)"
+            style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:11px;width:170px;font-family:monospace"></div>
+        <div class=row style="height:50px"><div class=t>搜索模板</div>
+          <input value="${N.searchTpl}" oninput="NEW.searchTpl=this.value" placeholder="…/search?q=**"
+            style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:11px;width:170px;font-family:monospace"></div>
+        <div class=row style="height:50px"><div class=t>分页参数</div>
+          <input value="${N.pageParam}" oninput="NEW.pageParam=this.value" placeholder="fypage 或 page"
+            style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt3);font-size:12px;width:130px;font-family:monospace"></div>
+      </div>
+      <div style="display:flex;gap:10px;padding:0 14px">
+        <div class="btn g" style="flex:1;height:42px" onclick="toast('自动识别：抓到 24 条，已填初版规则')">✨ 自动识别</div>
+        <div class="btn g" style="flex:1;height:42px" onclick="testScript()">▶ 测试抓取</div>
+      </div>
+      <div id=testres></div>`;
+    } else if(N.type==='js'){
+      body=`<div class=code>export default {
+  name: '${N.name||'新站点'}',
+  home: () => '${N.site||'https://'}',
+  async parse(url, html) {
+    // 返回 {type:'home'|'list'|'detail', ...}
+    const cards = [...html.matchAll(/<a[^>]+href="(\\/v\\/[\\w-]+)"[^>]*>([\\s\\S]{0,800}?)<\\/a>/g)]
+      .map(m => ({ title: m[2].replace(/<[^>]+>/g,'').trim(), url: m[1] }));
+    return { type:'list', title:'', cards };
+  }
+};</div>
+      <div style="display:flex;gap:10px;padding:0 14px">
+        <div class="btn g" style="flex:1;height:42px" onclick="testScript()">▶ 测试运行</div></div>
+      <div id=testres></div>`;
+    } else {
+      body=`<div class=code># -*- coding: utf-8 -*-
+NAME = '${N.name||'新站点'}'
+SITE = '${N.site||'https://'}'
+
+def home():
+    return SITE + '/'
+
+def parse(url, html):
+    return {'type':'list', 'title':'', 'cards': C.rv_cards(html)}</div>
+      <div class=group><div class=gh>依赖（保存后自动 pip 安装）</div>
+        <div class=row style="height:50px"><div class=t>pip 包</div>
+          <input value="${N.deps}" oninput="NEW.deps=this.value" placeholder="lxml, requests"
+            style="text-align:right;background:transparent;border:0;outline:0;color:var(--txt);font-size:12px;width:160px"></div></div>
+      <div style="display:flex;gap:10px;padding:0 14px">
+        <div class="btn g" style="flex:1;height:42px" onclick="testScript()">▶ 测试运行</div></div>
+      <div id=testres></div>`;
+    }
+  }
+  const canNext = N.step===1? true : (N.step===2? (N.name.trim()&&N.site.trim()) : true);
+  document.getElementById('view').innerHTML=topbar(N.step===1?'新建脚本':'新建 · '+N.step+'/3')+body+
+   `<div style="display:flex;gap:10px;padding:16px 14px 24px">
+      ${N.step>1?`<div class="btn g" style="flex:0 0 90px;height:44px" onclick="NEW.step--;re()">上一步</div>`:''}
+      ${N.step<3
+        ? `<div class="btn" style="flex:1;height:44px;${canNext?'':'opacity:.45'}" onclick="${canNext?'NEW.step++;re()':"toast('名称和站点地址必填')"}">下一步</div>`
+        : `<div class="btn" style="flex:1;height:44px" onclick="saveNewScript()">保存并启用</div>`}
+    </div>`;
+}
+function pickType(t){
+  if(t==='import'){ openSheet(`<div style="padding:0 16px 10px">
+    <div style="font:700 15px/21px inherit;margin-bottom:12px">导入脚本</div>
+    <div class=group style="margin:0">
+      <div class=row onclick="closeSheet();toast('粘贴 URL 后自动识别类型')"><div class=t>从 URL 导入</div><div class=v>规则 JSON / py / js</div><div class=arw>›</div></div>
+      <div class=row onclick="closeSheet();toast('已读取剪贴板')"><div class=t>从剪贴板</div><div class=arw>›</div></div>
+      <div class=row onclick="closeSheet();toast('选择文件…')"><div class=t>从文件</div><div class=arw>›</div></div>
+      <div class=row onclick="closeSheet();toast('内置示例 12 个')"><div class=t>内置示例库</div><div class=arw>›</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--txt3);line-height:17px;margin-top:12px">
+      支持海阔视界规则 JSON（自动转为「硬解规则」）、单文件 .py / .js。</div>
+  </div>`); return; }
+  NEW.type=t; NEW.step=2; re();
+}
+function testScript(){
+  document.getElementById('testres').innerHTML=`<div class=group style="margin-top:12px">
+    <div style="padding:12px 16px">
+      <div style="font:700 13px/19px inherit;margin-bottom:8px;color:#6ee7a0">✓ 测试通过 · 抓到 24 条</div>
+      ${[0,1,2].map(i=>`<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)">
+        <div style="width:44px;height:30px;border-radius:6px;background:${GRAD[i%GRAD.length]};flex:0 0 auto"></div>
+        <div style="font-size:12px;color:var(--txt2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${TITLES[i]}</div>
+      </div>`).join('')}
+      <div style="font-size:11px;color:var(--txt3);margin-top:8px">耗时 1240ms · 编码 UTF-8</div>
+    </div></div>`;
+}
+function saveNewScript(){
+  const n=NEW.name||'新站点';
+  SCRIPTS.push({id:NEW.id||slug(n),name:n,lang:NEW.type==='py'?'PY':(NEW.type==='js'?'JS':'RULE'),
+    dom:(NEW.site||'').replace(/^https?:\/\//,'').split('/')[0],on:1,sec:0});
+  SITES.push({id:NEW.id||slug(n),name:n,domain:(NEW.site||'').replace(/^https?:\/\//,'').split('/')[0],
+    icon:NEW.icon,desc:'刚刚添加',on:1});
+  toast('已保存并启用：'+n);
+  STACK=[]; TABS.app();
+}
+
+/* ===================== P-05 脚本编辑 ===================== */
+
+function pgScriptEdit(id){
+  const code=`# -*- coding: utf-8 -*-
+NAME = '示例站点'
+SITE = 'https://example.com'
+
+def home():
+    return SITE + '/home'
+
+def parse(url, html):
+    # 首页
+    if url.endswith('/home'):
+        return {'type':'home',
+                'heroes': C.rv_heroes(html),
+                'cats': _cats(),
+                'sections': C.rv_sections(html)}
+    # 详情
+    if '/v/' in url:
+        r = C.rv_detail(html)
+        return {'type':'detail','detail':r}
+    # 列表
+    return {'type':'list','title':'', 'cards': C.rv_cards(html)}`;
+  document.getElementById('view').innerHTML=topbar(id==='new'?'新建脚本':'编辑 · '+id)+
+   `<div class=code>${code.replace(/</g,'&lt;')}</div>
+    <div style="display:flex;gap:10px;padding:0 14px 20px">
+      <div class="btn g" style="flex:1;height:40px" onclick="toast('语法检查通过')">语法检查</div>
+      <div class="btn" style="flex:1;height:40px" onclick="toast('已保存')">保存</div>
+    </div>
+    <div class=sec><div class=sec-h><h3>调试</h3></div>
+      <div class="btn g" style="height:40px" onclick="go(()=>pgTerm())">🐍 在终端里跑这段</div></div>`;
+}
+
+/* ===================== P-07 模块管理 ===================== */
+let detPack=null;
+function pgModules(){
+  document.getElementById('view').innerHTML=topbar('模块管理')+
+   `<div style="padding:10px 14px 4px"><div class=row style="border:1px solid var(--line);border-radius:12px;height:44px">
+      <div style="color:var(--txt3)">📦</div>
+      <input id=pkgin placeholder="输入包名，如 lxml / requests"
+       style="flex:1;background:transparent;border:0;outline:0;color:var(--txt);font-size:14px">
+      <div style="color:var(--accent);font-size:13px" onclick="doDetect()">检测</div></div></div>
+    <div id=detres></div>
+    <div class=sec><div class=sec-h><h3>已安装</h3><s>3 个</s></div>
+      ${MODULES.map(m=>`<div class=listline">
+        <div class=ic>${m.lv==='pure'?'🟢':'🔵'}</div>
+        <div class=n><b>${m.pkg} <span class=muted style="font-weight:400">${m.ver}</span></b>
+          <small>${m.lv==='pure'?'纯 Python':'官方预编译'} · ${m.sz}</small></div>
+        <div style="color:var(--err);font-size:12px" onclick="toast('已卸载 ${m.pkg}')">卸载</div>
+      </div>`).join('')}
+    </div>
+    <div class=sec><div style="font-size:11px;line-height:17px;color:var(--txt3)">
+      ⚠ 装包等于执行第三方代码，请只装你信任的库。<br>
+      带 C 扩展的包若官方无预编译轮子，会提示需电脑编译。</div></div>`;
+}
+function doDetect(){
+  const v=(document.getElementById('pkgin')||{}).value||'';
+  if(!v){ toast('请输入包名'); return; }
+  const lv = /^(lxml|numpy|pillow|scipy|pandas|cryptography)$/.test(v.trim()) ? 'android' : 'pure';
+  document.getElementById('detres').innerHTML=`<div class=group style="margin-top:12px">
+    <div style="padding:14px 16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <b style="font:700 15px/21px inherit">${v.trim()}</b>
+        <span class="pill ${lv==='pure'?'ok':'bl'}">${lv==='pure'?'🟢 纯 Python':'🔵 官方预编译'}</span></div>
+      <div style="font-size:12px;color:var(--txt3);line-height:18px">
+        ${lv==='pure'?'PyPI universal wheel，直接装':'cp313-android_24_arm64_v8a.whl（Chaquopy 官方）'}<br>
+        依赖：${v.trim()==='requests'?'certifi, charset-normalizer, idna, urllib3':'无'}</div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <div class="btn" style="flex:1;height:40px" onclick="installPkg('${v.trim()}')">安装</div>
+        <div class="btn g" style="flex:1;height:40px" onclick="toast('详情')">详情</div></div>
+    </div></div>`;
+}
+function installPkg(n){
+  document.getElementById('detres').innerHTML=`<div class=group style="margin-top:12px">
+    <div style="padding:14px 16px">
+      <div style="font:700 13px/19px inherit;margin-bottom:8px">正在安装 ${n}</div>
+      <div class=bar><i style="width:62%"></i></div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:8px;white-space:pre-line">下载 whl… 240 KB / 380 KB
+解压到 files/pkg/${n}-x.y.z/
+加入 sys.path</div>
+    </div></div>`;
+  setTimeout(()=>{ toast('已安装 '+n); pgModules(); },1400);
+}
+
+/* ===================== P-09 终端 ===================== */
+let TERM_MODE='sh', TERM_LINES=['$ ls','scripts/   pkg/   cache/','$ py',
+'Python 3.13.9 (CPython) · 输入 Ctrl+D 回 shell','>>> 1+1','2','>>> Ctrl+D','$'];
+function termRender(){
+  const t=document.getElementById('term');
+  if(!t)return;
+  t.innerHTML=TERM_LINES.map(l=>{
+    if(l.startsWith('>>>')||l.startsWith('$ '))return `<span class=ok>${l.replace(/</g,'&lt;')}</span>`;
+    if(/Traceback|Error/.test(l))return `<span class=r>${l.replace(/</g,'&lt;')}</span>`;
+    return l.replace(/</g,'&lt;');
+  }).join('\n');
+  t.scrollTop=t.scrollHeight;
+}
+function pgTerm(){
+  document.getElementById('view').innerHTML=`
+   <div style="display:flex;flex-direction:column;height:100vh">
+     <div style="height:52px;display:flex;align-items:center;gap:8px;padding:0 12px;flex:0 0 auto;
+       border-bottom:1px solid var(--line)">
+       <div onclick="back()" style="width:32px;font-size:20px">‹</div>
+       <div style="flex:1;font:600 14px/20px inherit">终端</div>
+       <span class="pill ${TERM_MODE==='sh'?'ok':'bl'}">${TERM_MODE==='sh'?'shell':'python'}</span>
+       <div onclick="TERM_MODE=(TERM_MODE==='sh'?'py':'sh');pgTerm()"
+         style="width:32px;text-align:center;font-size:15px">${TERM_MODE==='sh'?'🐍':'$'}</div>
+       <div onclick="termMenu()" style="width:32px;text-align:center;font-size:17px">⋮</div>
+     </div>
+     <div class=term id=term style="flex:1;margin:0;border-radius:0;height:auto"></div>
+     <div style="flex:0 0 auto;border-top:1px solid var(--line);background:#0d141a">
+       <div style="display:flex;gap:6px;overflow-x:auto;padding:6px 8px 4px;scrollbar-width:none">
+         ${['Esc','Tab','Ctrl','Alt','←','↑','↓','→','Home','End','PgUp','PgDn','⌫','⏎'].map(k=>
+           `<b onclick="termKey('${k}')" style="flex:0 0 auto;padding:6px 10px;border-radius:7px;
+             background:var(--surface2);color:var(--txt2);font:500 11px/14px ui-monospace,monospace">${k}</b>`).join('')}
+       </div>
+       <div style="display:flex;align-items:center;gap:8px;padding:0 10px 10px">
+         <span style="font-family:monospace;color:#6ee7a0;font-size:13px">${TERM_MODE==='sh'?'$':'>>>'}</span>
+         <input id=tin placeholder="${TERM_MODE==='sh'?'':'表达式'}"
+           onkeydown="if(event.key==='Enter'){event.preventDefault();runTerm()}"
+           style="flex:1;background:transparent;border:0;outline:0;color:#c8e1ff;
+             font:400 13px/19px ui-monospace,monospace;caret-color:#6ee7a0">
+         <div onclick="runTerm()" style="padding:6px 12px;border-radius:8px;background:var(--surface2);
+           color:var(--txt2);font-size:12px">↵</div>
+       </div>
+     </div>
+   </div>`;
+  termRender();
+}
+function termMenu(){
+  openSheet(`<div style="padding:0 10px 8px">
+    <div class=row onclick="closeSheet();TERM_LINES=[];termRender()"><div class=t>清屏</div>
+      <div class=v>Ctrl+L</div></div>
+    <div class=row onclick="closeSheet();toast('命名空间已重置')"><div class=t>重置 Python 命名空间</div></div>
+    <div class=row onclick="closeSheet();toast('变量：h, s, url')"><div class=t>查看变量</div></div>
+    <div class=row onclick="closeSheet();go(()=>pgModules())"><div class=t>已装模块</div><div class=v>3</div></div>
+    <div class=row onclick="closeSheet();go(()=>pgLogs())"><div class=t>日志</div></div>
+    <div class=row onclick="closeSheet();toast('历史：ls / py / pip install lxml')"><div class=t>命令历史</div></div>
+    <div class=row onclick="closeSheet();toast('help：ls cd pwd cat grep find py pip curl site')"><div class=t>可用命令帮助</div></div>
+  </div>`);
+}
+function termKey(k){ const inp=document.getElementById('tin');
+  if(!inp)return;
+  if(k==='Ctrl'){ inp.value+='^'; inp.focus(); toast('Ctrl 按下，再按字母（模拟）'); return; }
+  if(k==='Tab'){ const v=(inp.value||'').trim();
+    const cand=['ls','cd','cat','py','pip install ','pip list','site list','help','clear'].filter(c=>c.startsWith(v));
+    if(cand.length===1) inp.value=cand[0]; if(cand.length>1) toast('候选：'+cand.join(' '));
+    inp.focus(); return; }
+  if(k==='↑'||k==='↓'){ toast('历史：'+(k==='↑'?'上一条':'下一条')); return; }
+  if(k==='⌫'){ inp.value=(inp.value||'').slice(0,-1); inp.focus(); return; }
+  if(k==='⏎'){ runTerm(); return; }
+  inp.value+=(k.length===1?'':''); inp.focus();
+}
+function runTerm(){
+  const inp=document.getElementById('tin'), v=(inp.value||'').trim();
+  if(!v)return;
+  inp.value='';
+  if(TERM_MODE==='py'){
+    TERM_LINES.push('>>> '+v);
+    if(/^1\/0$/.test(v)) TERM_LINES.push('Traceback (most recent call last):\n  ZeroDivisionError: division by zero');
+    else if(/^\d+([+\-*/]\d+)*$/.test(v)){ try{ TERM_LINES.push(String(eval(v))); }catch(e){ TERM_LINES.push('Error'); } }
+    else if(/^import /i.test(v)) TERM_LINES.push('(已导入)');
+    else TERM_LINES.push('(执行完成)');
+  } else {
+    TERM_LINES.push('$ '+v);
+    const c=v.split(/\s+/);
+    if(c[0]==='ls') TERM_LINES.push('scripts/   pkg/   cache/   sites/');
+    else if(c[0]==='cd') TERM_LINES.push('→ '+ (c[1]||'~'));
+    else if(c[0]==='pwd') TERM_LINES.push('/data/user/0/com.rou.parser/files');
+    else if(c[0]==='cat') TERM_LINES.push('# '+ (c[1]||'文件') +' 内容…');
+    else if(c[0]==='py'){ TERM_MODE='py'; TERM_LINES.push('Python 3.13.9 (CPython) · Ctrl+D 退出'); }
+    else if(c[0]==='pip'){
+      if(c[1]==='install') { TERM_LINES.push('检测 '+(c[2]||'')+' … 🟢 纯 Python'); TERM_LINES.push('下载 whl → 解压 → sys.path OK'); }
+      else if(c[1]==='list') TERM_LINES.push('requests 2.34.2  lxml 6.1.3  numpy 2.5.5');
+      else TERM_LINES.push('用法: pip install|list|uninstall');
+    }
+    else if(c[0]==='help') TERM_LINES.push('ls cd pwd cat mkdir rm cp mv find grep py pip curl site help clear history');
+    else if(c[0]==='site') TERM_LINES.push(c[1]==='list'?'demo_site(示例站点)  manga_x(某漫画站, 停用)':'site test → 抓到 24 条');
+    else if(c[0]==='clear'){ TERM_LINES=[]; }
+    else if(c[0]==='history') TERM_LINES.push('ls / py / pip install lxml');
+    else TERM_LINES.push('命令不存在: '+c[0]+'（键入 help 看列表）');
+  }
+  termRender();
+}
+
+/* ===================== P-21 图片查看器 ===================== */
+function pgImages(idx){
+  idx=idx||0;
+  document.getElementById('view').innerHTML=`
+   <div style="position:relative;min-height:100vh;background:#000;display:flex;flex-direction:column">
+     <div style="height:52px;display:flex;align-items:center;gap:10px;padding:0 12px;color:#fff">
+       <div onclick="back()" style="font-size:20px">‹</div>
+       <div style="flex:1;font:600 14px/20px inherit">图集 · ${idx+1}/9</div>
+       <div style="font-size:13px;opacity:.8">⋯</div>
+     </div>
+     <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:8px">
+       <div style="width:100%;aspect-ratio:3/4;border-radius:8px;background:${GRAD[idx%GRAD.length]};
+         display:flex;align-items:center;justify-content:center;color:#ffffff55;font-size:13px">双指缩放 · 左右翻页</div>
+     </div>
+     <div style="height:64px;display:flex;align-items:center;justify-content:space-around;color:#fff;font-size:13px">
+       <div onclick="pgImages(Math.max(0,${idx}-1))">‹ 上一张</div>
+       <div onclick="toast('已保存到相册')">⤓ 保存</div>
+       <div onclick="toast('已复制链接')">⧉ 链接</div>
+       <div onclick="pgImages(Math.min(8,${idx}+1))">下一张 ›</div>
+     </div>
+   </div>`;
+}
+
+/* ===================== P-22 音频播放器 ===================== */
+function pgAudio(title){
+  title=title||'深夜电台 · 第 12 期';
+  document.getElementById('view').innerHTML=topbar('音频')+
+   `<div style="padding:18px 40px 8px">
+      <div style="width:100%;aspect-ratio:1;border-radius:18px;background:${GRAD[4]};
+        display:flex;align-items:center;justify-content:center;font-size:44px">🎧</div>
+    </div>
+    <div style="text-align:center;padding:10px 20px 4px">
+      <div style="font:800 17px/23px inherit">${title}</div>
+      <div style="font-size:12px;color:var(--txt3);margin-top:4px">某播客 · 有声阅读</div>
+    </div>
+    <div style="padding:12px 20px 0"><div class=bar><i style="width:42%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt3)"><span>18:42</span><span>44:10</span></div></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:26px;padding:16px 0;font-size:22px">
+      <div>⏮</div><div onclick="toast('暂停/播放')" style="width:56px;height:56px;border-radius:99px;background:var(--accent);
+        color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px">▶</div>
+      <div>⏭</div>
+    </div>
+    <div style="display:flex;justify-content:space-around;padding:0 20px 14px;font-size:12px;color:var(--txt2)">
+      <div onclick="toast('倍速 1.5×')">1.0×</div><div onclick="toast('定时 30 分钟')">⏱ 定时</div>
+      <div onclick="toast('已加入收藏')">♥ 收藏</div><div onclick="toast('下载中')">⤓</div>
+    </div>
+    <div class=sec><div class=sec-h><h3>播放列表</h3><s>3 集</s></div>
+      ${[1,2,3].map(n=>`<div class=listline"><div class=ic>${n}</div><div class=n>
+        <b>第 ${n} 期 · 深夜话题</b><small>${n===1?'正在播放':'22:10'}</small></div><div class=arw>▶</div></div>`).join('')}
+    </div>`;
+}
+
+/* ===================== P-23 阅读器 ===================== */
+function pgBook(){
+  const text=['　　夜深了，城市还亮着。他把手机放在枕边，屏幕的光映在天花板上。',
+   '　　窗外的雨下得很密，像有人在低声说话。他翻开那本一直没读完的书，',
+   '　　第一章讲的是一个年轻人如何在陌生的城市里找到自己的位置。',
+   '　　他读了两页，忽然觉得这句话说的就是自己。','　　——于是他继续读下去。'];
+  document.getElementById('view').innerHTML=`
+   <div style="min-height:100vh;background:#141109;color:#e8e2d6;padding-bottom:70px">
+     <div style="height:52px;display:flex;align-items:center;padding:0 14px;gap:10px">
+       <div onclick="back()" style="font-size:20px">‹</div>
+       <div style="flex:1;font:600 14px/20px inherit;opacity:.9">夜行记 · 第 3 章</div>
+       <div onclick="toast('目录')" style="font-size:14px">☰</div>
+     </div>
+     <div style="padding:8px 22px;font-size:17px;line-height:32px;letter-spacing:.3px">
+       ${text.map(p=>`<p style="margin:0 0 10px">${p}</p>`).join('')}
+     </div>
+     <div style="position:fixed;left:0;right:0;bottom:0;max-width:430px;margin:0 auto;height:56px;
+       background:#141109f2;border-top:1px solid #2a2418;display:flex;align-items:center;
+       justify-content:space-around;font-size:12px;color:#b9b0a0">
+       <div>☰ 目录</div><div>☀ 亮度</div>
+       <div onclick="toast('TTS 有声阅读：开始朗读')" style="color:#ffb300">🔊 朗读</div>
+       <div>ᴬ 字号</div><div>◐ 背景</div>
+     </div>
+   </div>`;
+}
+
+/* ===================== P-10 设置根 ===================== */
+function pgSettings(){
+  const rows=[
+    ['站点与脚本','2 个站点',()=>pgSetSite()],
+    ['网络','DoH',()=>pgSetNet()],
+    ['播放','自动 · 128MB',()=>pgSetPlay()],
+    ['外观','深色 · 2 列',()=>pgSetUI()],
+    ['Python','3.13.9',()=>pgSetPy()],
+    ['存储','128 MB',()=>pgSetStorage()],
+    ['关于','v1.0.0',()=>pgAbout()]
+  ];
+  document.getElementById('view').innerHTML=topbar('设置')+
+   `<div class=group style="margin-top:10px">${rows.map((r,i)=>`<div class=row onclick="go(setPage${i})">
+      <div class=t>${r[0]}</div><div class=v>${r[1]}</div><div class=arw>›</div></div>`).join('')}</div>
+    <div style="padding:0 18px;font-size:11px;color:var(--txt3)">所有设置立即生效，无需重启</div>`;
+  window.setPage0=rows[0][2];window.setPage1=rows[1][2];window.setPage2=rows[2][2];
+  window.setPage3=rows[3][2];window.setPage4=rows[4][2];window.setPage5=rows[5][2];window.setPage6=rows[6][2];
+}
+
+/* ---- P-11 站点与脚本 ---- */
+function pgSetSite(){
+  document.getElementById('view').innerHTML=topbar('站点与脚本')+
+   `<div class=group><div class=gh>站点</div>
+     ${SCRIPTS.map(s=>`<div class=row><div class=t>${s.name}<small>${s.dom}</small></div>
+       <span class="pill ${s.on?'ok':''}">${s.on?'启用':'停用'}</span>
+       <div class="sw ${s.on?'on':''}" onclick="this.classList.toggle('on')"></div></div>`).join('')}
+   </div>
+   <div class=group><div class=gh>默认站点</div>
+     <div class=row><div class=t>启动时打开</div><div class=v>示例站点</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>当前站点覆盖</div>
+     <div class=row><div class=t>User-Agent</div><div class=v>默认</div><div class=arw>›</div></div>
+     <div class=row><div class=t>Referer</div><div class=v>example.com</div><div class=arw>›</div></div>
+     <div class=row><div class=t>Cookie</div><div class=v>未设置</div><div class=arw>›</div></div>
+     <div class=row><div class=t>网络覆盖</div><div class=v>跟随全局</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>清理</div>
+     <div class=row onclick="toast('已清 12.4 MB')"><div class=t>清该站点缓存</div><div class=v>12.4 MB</div><div class=arw>›</div></div></div>`;
+}
+
+/* ---- P-12 网络 ---- */
+function pgSetNet(){
+  document.getElementById('view').innerHTML=topbar('网络')+
+   `<div class=group><div class=gh>连接方式</div>
+     <div style="padding:10px 16px 14px"><div class=seg>
+       <b>直连</b><b class=on>DoH</b><b>代理</b><b>DoH+代理</b></div>
+       <div style="font-size:11px;color:var(--txt3);margin-top:8px;line-height:16px">
+        DoH 可绕过域名污染；代理可绕过 IP 阻断。被污染环境选「DoH+代理」。</div>
+     </div></div>
+   <div class=group><div class=gh>DoH 端点</div>
+     <div class=row><div class=t>阿里 223.5.5.5</div><span class="pill ok">已选</span></div>
+     <div class=row><div class=t>腾讯 1.12.12.12</div><div class=arw>›</div></div>
+     <div class=row><div class=t>Cloudflare 1.1.1.1</div><div class=arw>›</div></div>
+     <div class=row><div class=t>自定义</div><div class=v>未设置</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('解析 example.com → 202.160.128.40 · 240ms')">
+       <div class=t>测试解析</div><div class=v>example.com</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>代理</div>
+     <div style="padding:8px 16px 12px"><div class=seg><b class=on>HTTP</b><b>SOCKS5</b></div></div>
+     <div class=row><div class=t>地址</div><div class=v>127.0.0.1:7890</div><div class=arw>›</div></div>
+     <div class=row><div class=t>认证</div><div class=v>无</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('连通 · 480ms')"><div class=t>测试代理</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>请求参数</div>
+     <div class=row><div class=t>超时</div><div class=v>20 秒</div><div class=arw>›</div></div>
+     <div class=row><div class=t>重试次数</div><div class=v>1</div><div class=arw>›</div></div>
+     <div class=row><div class=t>请求限速</div><div class=v>3 req/s</div><div class=arw>›</div></div>
+     <div class=row><div class=t>并发数</div><div class=v>4</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>站点覆盖</div>
+     <div class=row><div class=t>示例站点</div><div class=v>跟随全局</div><div class=arw>›</div></div></div>`;
+}
+
+/* ---- P-13 播放 ---- */
+function pgSetPlay(){
+  document.getElementById('view').innerHTML=topbar('播放')+
+   `<div class=group><div class=gh>解码</div>
+     <div style="padding:10px 16px 14px"><div class=seg><b class=on>自动</b><b>硬解</b><b>软解</b></div></div>
+   </div>
+   <div class=group><div class=gh>缓存与速度</div>
+     <div class=row><div class=t>分片缓存上限</div><div class=v>128 MB</div><div class=arw>›</div></div>
+     <div class=row><div class=t>默认倍速</div><div class=v>1.0×</div><div class=arw>›</div></div>
+     <div class=row><div class=t>长按倍速</div><div class=v>2.0×</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>手势</div>
+     <div class=row><div class=t>左侧上下调亮度</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+     <div class=row><div class=t>右侧上下调音量</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+     <div class=row><div class=t>横向滑动调进度</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+   </div>
+   <div class=group><div class=gh>其他</div>
+     <div class=row><div class=t>记忆播放进度</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+     <div class=row><div class=t>后台播放</div><div class=sw onclick="this.classList.toggle('on')"></div></div>
+     <div class=row><div class=t>画面比例</div><div class=v>适应</div><div class=arw>›</div></div>
+   </div>`;
+}
+
+/* ---- P-14 外观 ---- */
+function pgSetUI(){
+  const colors=['#FF5A3C','#4DABF7','#51CF66','#FCC419','#B197FC','#FF6B9D'];
+  document.getElementById('view').innerHTML=topbar('外观')+
+   `<div class=group><div class=gh>主题</div>
+     <div style="padding:10px 16px 14px"><div class=seg><b class=on>深色</b><b>浅色</b><b>跟随系统</b></div></div>
+   </div>
+   <div class=group><div class=gh>强调色</div>
+     <div style="display:flex;gap:12px;padding:10px 16px 16px">
+       ${colors.map((c,i)=>`<div onclick="setAccent('${c}')" style="width:34px;height:34px;border-radius:99px;background:${c};
+         ${i===0?'outline:2px solid #fff;outline-offset:2px':''}"></div>`).join('')}
+     </div></div>
+   <div class=group><div class=gh>布局</div>
+     <div class=row><div class=t>首页轮播高度</div><div class=v>200 dp</div><div class=arw>›</div></div>
+     <div class=row><div class=t>卡片列数</div><div class=v>2 列</div><div class=arw>›</div></div>
+     <div class=row><div class=t>圆角</div><div class=v>中 12</div><div class=arw>›</div></div>
+     <div class=row><div class=t>字号缩放</div><div class=v>100%</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>动效</div>
+     <div class=row><div class=t>界面动效</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+     <div class=row><div class=t>轮播自动切换</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+   </div>`;
+}
+function setAccent(c){ document.documentElement.style.setProperty('--accent',c); toast('强调色已更新'); }
+
+/* ---- P-15 Python ---- */
+function pgSetPy(){
+  document.getElementById('view').innerHTML=topbar('Python')+
+   `<div class=group><div class=gh>解释器</div>
+     <div class=row><div class=t>版本</div><div class=v>3.13.9 (CPython)</div></div>
+     <div class=row><div class=t>启动耗时</div><div class=v>1.2 s</div></div>
+     <div class=row><div class=t>内存占用</div><div class=v>42 MB</div></div>
+     <div class=row><div class=t>脚本目录</div><div class=v>files/scripts</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>模块</div>
+     <div class=row onclick="go(()=>pgModules())"><div class=t>模块管理</div><div class=v>已装 3 个</div><div class=arw>›</div></div>
+     <div class=row><div class=t>自动挂载已装包</div><div class="sw on" onclick="this.classList.toggle('on')"></div></div>
+   </div>
+   <div class=group><div class=gh>sys.path</div>
+     ${['/data/.../python','/data/.../files/pkg/lxml-6.1.3','/data/.../files/pkg/numpy-2.5.5']
+       .map(p=>`<div class=row><div class=t style="font-size:11px;font-family:monospace;color:var(--txt2)">${p}</div>
+         <div style="color:var(--err);font-size:12px">移除</div></div>`).join('')}
+   </div>
+   <div class=group><div class=gh>危险操作</div>
+     <div class=row onclick="toast('需二次确认：重置解释器')"><div class=t style="color:var(--err)">重置解释器</div><div class=arw>›</div></div></div>`;
+}
+
+/* ---- P-16 存储 ---- */
+function pgSetStorage(){
+  const segs=[['图片',36,'#4DABF7'],['视频',58,'#FF5A3C'],['页面',12,'#51CF66'],['包',18,'#FCC419'],['日志',4,'#B197FC']];
+  const tot=segs.reduce((a,b)=>a+b[1],0);
+  document.getElementById('view').innerHTML=topbar('存储')+
+   `<div class=group><div class=gh>占用 128 MB</div>
+     <div style="padding:12px 16px">
+       <div style="display:flex;height:10px;border-radius:99px;overflow:hidden;margin-bottom:12px">
+         ${segs.map(s=>`<i style="width:${s[1]/tot*100}%;background:${s[2]}"></i>`).join('')}
+       </div>
+       ${segs.map(s=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;line-height:24px">
+         <i style="width:8px;height:8px;border-radius:99px;background:${s[2]}"></i>
+         <span style="flex:1;color:var(--txt2)">${s[0]}</span><span class=muted>${s[1]} MB</span></div>`).join('')}
+     </div></div>
+   <div class=group><div class=gh>清理</div>
+     <div class=row onclick="toast('已清理全部缓存 128 MB')"><div class=t style="color:var(--err)">清理全部缓存</div><div class=v>128 MB</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('已清理图片 36 MB')"><div class=t>清理图片</div><div class=v>36 MB</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('已清理视频 58 MB')"><div class=t>清理视频分片</div><div class=v>58 MB</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('已清理日志 4 MB')"><div class=t>清理日志</div><div class=v>4 MB</div><div class=arw>›</div></div>
+   </div>
+   <div class=group><div class=gh>导出</div>
+     <div class=row onclick="toast('已生成日志 zip')"><div class=t>导出日志</div><div class=arw>›</div></div>
+     <div class=row onclick="toast('已生成脚本包 zip')"><div class=t>导出脚本包</div><div class=arw>›</div></div>
+   </div>`;
+}
+
+/* ---- P-17 关于 ---- */
+function pgAbout(){
+  document.getElementById('view').innerHTML=topbar('关于')+
+   `<div style="text-align:center;padding:28px 0 12px">
+      <div style="width:72px;height:72px;border-radius:20px;margin:0 auto 12px;
+        background:linear-gradient(135deg,#FF5A3C,#c92a2a);display:flex;align-items:center;
+        justify-content:center;font-size:32px">🐍</div>
+      <div style="font:800 18px/24px inherit">解析器</div>
+      <div style="color:var(--txt3);font-size:12px;margin-top:4px">v1.0.0 (build 1)</div>
+    </div>
+   <div class=group><div class=gh>构建信息</div>
+     <div class=row><div class=t>Python</div><div class=v>3.13.9 CPython</div></div>
+     <div class=row><div class=t>Chaquopy</div><div class=v>17.2.0</div></div>
+     <div class=row><div class=t>AGP</div><div class=v>8.1.4</div></div>
+     <div class=row><div class=t>签名</div><div class=v>debug</div></div>
+     <div class=row><div class=t>ABI</div><div class=v>arm64-v8a</div></div>
+   </div>
+   <div class=group><div class=gh>其他</div>
+     <div class=row><div class=t>开源许可</div><div class=arw>›</div></div>
+     <div class=row><div class=t>GitHub</div><div class=arw>›</div></div>
+     <div class=row><div class=t>反馈</div><div class=arw>›</div></div>
+   </div>
+   <div style="padding:16px 18px;font-size:11px;line-height:17px;color:var(--txt3)">
+     本工具仅用于个人学习，解析规则由用户自行编写与承担。</div>`;
+}
+
+/* ---- P-18 日志 ---- */
+function pgLogs(){
+  document.getElementById('view').innerHTML=topbar('日志')+
+   `<div style="display:flex;gap:8px;padding:8px 14px">
+      <div class="btn g" style="height:36px;flex:1;font-size:13px">全部</div>
+      <div class="btn g" style="height:36px;flex:1;font-size:13px">错误 1</div>
+      <div class="btn g" style="height:36px;flex:1;font-size:13px">清理</div>
+    </div>
+    <div class=term style="height:auto;min-height:360px">
+<span style="color:#6ee7a0">[10:32:11]</span> 启动 Python 3.13.9 · 1.2s
+<span style="color:#6ee7a0">[10:32:12]</span> 加载脚本 scripts/demo_site.py
+<span style="color:#7dd3fc">[10:32:13]</span> GET https://example.com/home → 200 308323B 1840ms
+<span style="color:#7dd3fc">[10:32:14]</span> parse(home) → heroes 5 / sections 9
+<span style="color:#ff8a65">[10:33:02]</span> GET https://example.com/cat → 失败: SSLEOFError
+<span style="color:#ff8a65">[10:33:02]</span> 建议：网络设置改为 DoH+代理
+<span style="color:#6ee7a0">[10:33:20]</span> pipinst.install('lxml') → android wheel 9.4MB
+    </div>`;
+}
+
+/* ===================== 滚动指示条 ===================== */
+function updSB(){
+  const sb=document.getElementById('sb'), th=document.getElementById('sbi');
+  if(!sb||!th)return;
+  const d=document.documentElement;
+  const h=Math.max(d.scrollHeight, document.body.scrollHeight);
+  const vh=window.innerHeight, y=window.scrollY||d.scrollTop||0;
+  if(h<=vh+8){ sb.classList.remove('on'); return; }
+  const thumb=Math.max(30, Math.round(vh*vh/h));
+  const maxTop=h-vh, range=vh-thumb;
+  th.style.height=thumb+'px';
+  th.style.top=Math.round(maxTop>0?(y/maxTop)*range:0)+'px';
+  sb.classList.add('on');
+}
+window.addEventListener('scroll',updSB,{passive:true});
+window.addEventListener('resize',updSB);
+setInterval(updSB,600);
+
+/* ===================== 初始化 ===================== */
+TABS.app();
+setTimeout(updSB,100);
+</script></body></html>

@@ -1,0 +1,13 @@
+title: 界析 · JieXi
+description: 可编程 Android 解析客户端文档
+theme: jekyll-theme-cayman
+markdown: kramdown
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: false
+
+exclude:
+  - Gemfile
+  - Gemfile.lock

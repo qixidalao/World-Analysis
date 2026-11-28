@@ -57,7 +57,7 @@ adb install -r releases/JieXi-1.10.36-arm64.apk
 
 ## 文档
 
-完整目录见 [docs/INDEX.md](docs/INDEX.md)。
+完整目录见 [docs/index.md](docs/index.md)。
 
 ### 入门
 
